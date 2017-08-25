@@ -12,6 +12,8 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 /**
@@ -25,32 +27,51 @@ public class Sisdist1 {
      */
     public static void main(String[] args) {
 
-        Connection c = new Connection();
+        Peer c = new Peer();
     }
 }
 
-class Connection extends Thread {
+class Peer extends Thread {
 
     DataInputStream in;
     DataOutputStream out;
-    Socket clientSocket;
+    //Socket clientSocket;
     MulticastSocket s = null;
 
-    int peercomum;
+    private int id;
+    private int indexIp = 0;
+    private int indexPort = 0;
+    int privateKey;
+    int publicKey;
+    
+    private boolean peercomum;
+    private ArrayList<Integer> peerList;
 
-    public Connection() {
+    public Peer() {
 
         try {
+            id = (int) (Math.random() * 7000 +1025);
+
+            peercomum = true;
+            peerList = new ArrayList<>();
             InetAddress group = InetAddress.getByName("224.0.0.251");
             s = new MulticastSocket(6789);
             s.joinGroup(group);
             this.start();
+
+            //Scanner scanner = new Scanner(System.in);
+//          String msg = scanner.nextLine();
+            String msg = "oi, meu id e=:=" + id;
+            byte[] m = msg.getBytes();
+            DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
+            s.send(messageOut);
+
             while (true) {
-                Scanner scanner = new Scanner(System.in);
-                String msg = scanner.nextLine();
-                byte[] m = msg.getBytes();
-                DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
-                s.send(messageOut);
+                if(indexIp == 0){
+                    eleicao();
+                }
+                
+
                 if (msg.compareToIgnoreCase("sair") == 1) {
                     System.exit(0);
                 }
@@ -60,7 +81,15 @@ class Connection extends Thread {
             System.out.println("Connection:" + e.getMessage());
         }
     }
+    
+    public void eleicao(){
+        int voto = Collections.max(peerList);
+        
+    }
 
+
+
+    // thread para escutar
     public void run() {
         try {			                 // an echo server
 
@@ -68,7 +97,13 @@ class Connection extends Thread {
                 byte[] buffer = new byte[1000];
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
                 s.receive(messageIn);
-                System.out.println("Received:" + new String(messageIn.getData()));
+                String recieved = new String(messageIn.getData());
+                System.out.println("Received:" + recieved);
+                
+                String[] parts = recieved.split("=:=");
+                System.out.println(parts[1]);
+                peerList.add(Integer.parseInt(parts[1]));
+                
             }
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
@@ -76,8 +111,9 @@ class Connection extends Thread {
             System.out.println("readline:" + e.getMessage());
         } finally {
             try {
-                clientSocket.close();
-            } catch (IOException e) {/*close failed*/
+                //clientSocket.close();
+                s.close();
+            } catch (Exception e) {/*close failed*/
             }
         }
 
