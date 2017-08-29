@@ -71,9 +71,9 @@ class Peer extends Thread {
 //          String msg = scanner.nextLine();
             String msg = "oi meu id e=:=" + id;
             byte[] m = msg.getBytes();
-            System.out.println(msg);
-            DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
-            s.send(messageOut);
+//            System.out.println(msg);
+//            DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
+//            s.send(messageOut);
             enviarMsgMulticast(msg);
 
             while (true) {
@@ -107,6 +107,7 @@ class Peer extends Thread {
     }
 
     // thread para escutar
+    @Override
     public void run() {
         try {			                 // an echo server
              System.out.println("comecando a escutar...");
@@ -118,11 +119,22 @@ class Peer extends Thread {
                 System.out.println("Received:" + recieved);
 
                 String[] parts = recieved.split("=:=");
-                if (parts[0] == "oi meu id e") {
+//                System.out.println(parts[0]);
+                if (parts[0].equals("oi meu id e")) {
                     System.out.println(parts[1]);
-                    peerList.add(Integer.parseInt(parts[1]));
+                    
+                    int portRecebido = Integer.parseInt(parts[1]);
+                    System.out.println(portRecebido);
+                    boolean achou = peerList.contains(portRecebido);
+                    if(!achou){
+                        peerList.add(portRecebido);
+                        String msg = "oi meu id e=:=" + id;
+                        enviarMsgMulticast(msg);
+                    }else{
+                        System.out.println("achei na lista já!");}
+                    
                 }
-                if (parts[0] == "indexador") {
+                if (parts[0].equals("indexador")) {
                     indexIp = "localhost";
                     indexPort = Integer.parseInt(parts[1]);
                 }
@@ -151,7 +163,7 @@ class Peer extends Thread {
             byte[] m = msg.getBytes();
             DatagramPacket messageOut = new DatagramPacket(m, m.length, group, portaMulti);
             s.send(messageOut);
-            s.close();
+//            s.close();
         } catch (UnknownHostException ex) {
             Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
