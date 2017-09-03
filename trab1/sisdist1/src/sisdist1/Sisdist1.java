@@ -121,10 +121,13 @@ class Peer extends Thread {
                 String[] parts = recieved.split("=:=");
 //                System.out.println(parts[0]);
                 if (parts[0].equals("oi meu id e")) {
-                    System.out.println(parts[1]);
+//                    System.out.println(parts[1]);
+//                    String dado = parts[1];
+//                    System.out.println("|"+dado+"|");
+//                    dado = dado.trim();
                     
-                    int portRecebido = Integer.parseInt(parts[1]);
-                    System.out.println(portRecebido);
+                    int portRecebido = Integer.parseInt(parts[1].trim());
+//                    System.out.println(portRecebido);
                     boolean achou = peerList.contains(portRecebido);
                     if(!achou){
                         peerList.add(portRecebido);
