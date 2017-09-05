@@ -20,14 +20,14 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author a
+ * @author aaaaaaaaaaaaaaaaaa
  */
 public class Sisdist1 {
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         Peer c = new Peer();
     }
@@ -46,6 +46,7 @@ class Peer extends Thread {
     private int id;
     private String indexIp = "0";
     private int indexPort = 0;
+    private long timeOfLastIndexPing = 0;
 
     int privateKey;
     int publicKey;
@@ -54,7 +55,7 @@ class Peer extends Thread {
     private ArrayList<Integer> peerList;
     private ArrayList<ArrayList<Integer>> voteList;
 
-    public Peer() {
+    public Peer() throws InterruptedException {
 
         try {
             id = (int) (Math.random() * 7000 + 1025);
@@ -65,23 +66,28 @@ class Peer extends Thread {
             InetAddress group = InetAddress.getByName(ipMulti);
             s = new MulticastSocket(portaMulti);
             s.joinGroup(group);
+            NameAnnouncer na = new NameAnnouncer(id, ipMulti, portaMulti);
             this.start();
 
-            //Scanner scanner = new Scanner(System.in);
-//          String msg = scanner.nextLine();
             String msg = "oi meu id e=:=" + id;
             byte[] m = msg.getBytes();
-//            System.out.println(msg);
-//            DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
-//            s.send(messageOut);
+
             enviarMsgMulticast(msg);
 
             while (true) {
-                if (indexIp == "0" && peerList.size() > 3) {
+                long now = System.currentTimeMillis();
+                if(now - timeOfLastIndexPing > 6000 && indexIp != "0"){
+                    System.out.println("indexador morreu !!!!!!!!!! e agora? eleição");
+                    eleicao();
+                }
+//                Thread.sleep(1000);
+//                System.out.println("indexIp="+indexIp);
+//                System.out.println("peerList.size="+peerList.size());
+                if (indexIp == "0" && peerList.size() >= 3) {
                     eleicao();
                 }
 
-                if (msg.compareToIgnoreCase("sair") == 1) {
+                if (msg.trim().compareToIgnoreCase("sair") == 1) {
                     System.exit(0);
                 }
             }
@@ -96,7 +102,8 @@ class Peer extends Thread {
             Integer voto = Collections.max(peerList);
             //enviarMsgMulticast("voto=:=" + voto.toString());
             if (voto == id) {
-                enviarMsgMulticast("indexador=:=" + id);
+                enviarMsgMulticast("sou indexador id=:=" + id);
+                IndexAnnouncer ia = new IndexAnnouncer(id, ipMulti, portaMulti);
                 indexIp = myIp;
                 indexPort = id;
             }
@@ -110,36 +117,40 @@ class Peer extends Thread {
     @Override
     public void run() {
         try {			                 // an echo server
-             System.out.println("comecando a escutar...");
+            System.out.println("comecando a escutar...");
             while (true) {
                 byte[] buffer = new byte[1000];
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
                 s.receive(messageIn);
                 String recieved = new String(messageIn.getData());
                 System.out.println("Received:" + recieved);
-
                 String[] parts = recieved.split("=:=");
-//                System.out.println(parts[0]);
+
                 if (parts[0].equals("oi meu id e")) {
-//                    System.out.println(parts[1]);
-//                    String dado = parts[1];
-//                    System.out.println("|"+dado+"|");
-//                    dado = dado.trim();
-                    
                     int portRecebido = Integer.parseInt(parts[1].trim());
-//                    System.out.println(portRecebido);
                     boolean achou = peerList.contains(portRecebido);
-                    if(!achou){
+                    if (!achou) {
                         peerList.add(portRecebido);
                         String msg = "oi meu id e=:=" + id;
+                        Thread.sleep(10);
                         enviarMsgMulticast(msg);
-                    }else{
-                        System.out.println("achei na lista já!");}
-                    
+                    } else {
+                        System.out.println("achei na lista já!");
+                    }
+                    System.out.println(peerList);
+
                 }
-                if (parts[0].equals("indexador")) {
+                if (parts[0].equals("sou indexador id")) {
+                    if (indexPort != Integer.parseInt(parts[1].trim())) {
+                        System.out.println("Indexador Mudou!!-----");
+                        indexIp = "localhost";
+                        indexPort = Integer.parseInt(parts[1].trim());
+                        timeOfLastIndexPing = System.currentTimeMillis();
+                    } else {
+                        timeOfLastIndexPing = System.currentTimeMillis();
+                    }
                     indexIp = "localhost";
-                    indexPort = Integer.parseInt(parts[1]);
+                    indexPort = Integer.parseInt(parts[1].trim());
                 }
 
             }
@@ -147,6 +158,8 @@ class Peer extends Thread {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
             System.out.println("readline:" + e.getMessage());
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 //clientSocket.close();
