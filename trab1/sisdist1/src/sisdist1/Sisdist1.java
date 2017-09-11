@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,8 +53,8 @@ class Peer extends Thread {
     int publicKey;
 
     private boolean peercomum;
-    private ArrayList<Integer> peerList;
-    private ArrayList<ArrayList<Integer>> voteList;
+    private ArrayList<PeerData> peerList;
+
 
     public Peer() throws InterruptedException {
 
@@ -78,6 +79,17 @@ class Peer extends Thread {
                 long now = System.currentTimeMillis();
                 if(now - timeOfLastIndexPing > 6000 && indexIp != "0"){
                     System.out.println("indexador morreu !!!!!!!!!! e agora? eleição");
+//                    peerList.remove(new Integer(indexPort));
+                    //retirando da lista
+                    for (Iterator i = peerList.iterator(); i.hasNext(); ) {
+                        Object element = i.next();
+
+                        if (((PeerData)element).port == indexPort) {
+                           i.remove();
+                        }
+                    }
+                    indexIp = "";
+                    indexPort = 0;
                     eleicao();
                 }
 //                Thread.sleep(1000);
@@ -99,7 +111,8 @@ class Peer extends Thread {
 
     public void eleicao() {
         if (!peerList.isEmpty()) {
-            Integer voto = Collections.max(peerList);
+            Integer voto = Collections.max(peerList).port;
+            
             //enviarMsgMulticast("voto=:=" + voto.toString());
             if (voto == id) {
                 enviarMsgMulticast("sou indexador id=:=" + id);
@@ -128,9 +141,9 @@ class Peer extends Thread {
 
                 if (parts[0].equals("oi meu id e")) {
                     int portRecebido = Integer.parseInt(parts[1].trim());
-                    boolean achou = peerList.contains(portRecebido);
+                    boolean achou = peerList.contains(new PeerData(portRecebido));
                     if (!achou) {
-                        peerList.add(portRecebido);
+                        peerList.add(new PeerData (portRecebido));
                         String msg = "oi meu id e=:=" + id;
                         Thread.sleep(10);
                         enviarMsgMulticast(msg);
