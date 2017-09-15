@@ -74,6 +74,8 @@ class Peer extends Thread {
             byte[] m = msg.getBytes();
 
             enviarMsgMulticast(msg);
+            // ligando recebedor de comandos
+            
 
             while (true) {
                 long now = System.currentTimeMillis();
@@ -98,6 +100,9 @@ class Peer extends Thread {
                 if (indexIp == "0" && peerList.size() >= 3) {
                     eleicao();
                 }
+                
+                //
+                
 
                 if (msg.trim().compareToIgnoreCase("sair") == 1) {
                     System.exit(0);

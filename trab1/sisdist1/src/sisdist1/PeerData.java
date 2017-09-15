@@ -6,6 +6,7 @@
 package sisdist1;
 
 import java.security.PublicKey;
+import java.util.ArrayList;
 
 /**
  *
@@ -17,6 +18,7 @@ public class PeerData implements Comparable<PeerData> {
 //    public int isIndex;
     public long timeOfLastPing;
     public PublicKey publicKey;
+    public ArrayList<String> produtos;
 
     public PeerData(int porta) {
         port = porta;
