@@ -20,6 +20,7 @@ import java.util.logging.Logger;
  * @author a1013343
  */
 public class IndexAnnouncer {
+
     int intervalo = 1000;
     String msg;
     String ipMulti = "224.0.0.251";
@@ -27,11 +28,13 @@ public class IndexAnnouncer {
     MulticastSocket s = null;
     InetAddress group;
     DatagramPacket messageOut;
+    public boolean on;
 
     public IndexAnnouncer(int mensagem, String ip, int porta) {
         msg = "sou indexador id=:=" + Integer.toString(mensagem);
         ipMulti = ip;
         portaMulti = porta;
+        on = true;
         try {
             group = InetAddress.getByName(ipMulti);
             s = new MulticastSocket(portaMulti);
@@ -43,7 +46,10 @@ public class IndexAnnouncer {
                 @Override
                 public void run() {
                     try {
-                        s.send(messageOut);
+                        if (on) {
+                            s.send(messageOut);
+                            System.out.println("Eu sou indexador, id=" + Integer.toString(mensagem));
+                        }
                     } catch (IOException ex) {
                         Logger.getLogger(IndexAnnouncer.class.getName()).log(Level.SEVERE, null, ex);
                     }

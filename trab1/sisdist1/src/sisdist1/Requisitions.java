@@ -19,14 +19,16 @@ import java.util.Scanner;
 public class Requisitions implements Runnable {
 
     int indexPort;
+    public boolean on;
 
     public Requisitions(int port) {
         indexPort = port;
+        on = true;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (on) {
             // receber comandos de compra e venda
             String cmd = "";
             System.out.println("\n digite o comando: ");
@@ -42,7 +44,7 @@ public class Requisitions implements Runnable {
 //            }
             if (indexPort > 1) {
                 enviarMsg(cmd);
-            }else{
+            } else {
                 System.out.println("Index not set");
             }
 
@@ -51,6 +53,11 @@ public class Requisitions implements Runnable {
 
     public void updateIndex(int port) {
         indexPort = port;
+        on = true;
+    }
+
+    public void turnOff() {
+        on = false;
     }
 
     public void enviarMsg(String msg) {
@@ -59,7 +66,9 @@ public class Requisitions implements Runnable {
 //            int serverPort = 7896;
             su = new Socket("localhost", indexPort);
             DataOutputStream outuni = new DataOutputStream(su.getOutputStream());
-            outuni.writeUTF(msg);
+            if (on) {
+                outuni.writeUTF(msg);
+            }
         } catch (UnknownHostException e) {
             System.out.println("Socket:" + e.getMessage());
         } catch (EOFException e) {

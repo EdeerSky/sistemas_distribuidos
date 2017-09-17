@@ -6,11 +6,13 @@
 package sisdist1;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -36,24 +38,15 @@ public class unicastListener implements Runnable {
     public void run() {
         if (myPort > 1) {
             try {
-//                String recebido;
-                // setup tcp server
-//                Socket skt = new Socket("localhost", myPort);
-                DatagramSocket ds = new DatagramSocket(myPort);
-//                DatagramSocket sds = new DatagramSocket();
-                DatagramPacket rdp, sdp;
-                String msg;
+                ServerSocket listenSocket = new ServerSocket(myPort);
                 while (true) {
-                    byte[] buf = new byte[100];
-                    rdp = new DatagramPacket(buf, buf.length);
-                    ds.receive(rdp);
-                    msg = new String(buf);
-                    msg = msg.trim();
-                    System.out.println("Mensagem recebida por Unicast: " + msg);
+                    Socket clientSocket = listenSocket.accept();
+                    Connection c = new Connection(clientSocket);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(unicastListener.class.getName()).log(Level.SEVERE, null, ex);
             }
+
         }
     }
 
@@ -61,4 +54,38 @@ public class unicastListener implements Runnable {
         myPort = port;
     }
 
+}
+
+class Connection extends Thread {
+
+    DataInputStream in;
+    Socket clientSocket;
+
+    public Connection(Socket aClientSocket) {
+        try {
+            clientSocket = aClientSocket;
+            in = new DataInputStream(clientSocket.getInputStream());
+            this.start();
+        } catch (IOException e) {
+            System.out.println("Connection:" + e.getMessage());
+        }
+    }
+
+    public void run() {
+        try {			                 // an echo server
+
+            String data = in.readUTF();	                  // read a line of data from the stream
+            System.out.print("recebi por unicast:" + data);
+        } catch (EOFException e) {
+            System.out.println("EOF:" + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("readline:" + e.getMessage());
+        } finally {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {/*close failed*/
+            }
+        }
+
+    }
 }
