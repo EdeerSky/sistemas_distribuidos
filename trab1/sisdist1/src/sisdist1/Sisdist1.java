@@ -17,8 +17,14 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -74,10 +80,10 @@ class Peer extends Thread {
         try {
             id = (int) (Math.random() * 7000 + 1025);
             myIp = "localhost";
-            SecuredRSAUsage cryp = new SecuredRSAUsage();
-            privateKey = cryp.getPrivateKey();
-            publicKey = cryp.getPublicKey();
-
+            //SecuredRSAUsage cryp = new SecuredRSAUsage();
+            //privateKey = cryp.getPrivateKey();
+            //publicKey = cryp.getPublicKey();
+            keyGenerator();
             souIndexador = false;
             peerList = new ArrayList<>();
             InetAddress group = InetAddress.getByName(ipMulti);
@@ -180,11 +186,14 @@ class Peer extends Thread {
                         // decode the base64 encoded string
                         byte[] decodedKey = Base64.getDecoder().decode(parts[2].trim());
                         // rebuild key using SecretKeySpec
-                        SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
+                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                        PublicKey originalKey = keyFactory.generatePublic(keySpec);
+                        //System.out.println(Base64.getEncoder().encodeToString(originalKey.getEncoded()));
                         peerList.add(new PeerData(portRecebido, (PublicKey) originalKey));
 //                        peerList.add(new PeerData(portRecebido));
                         
-                        String msg = "oi meu id e=:=" + id;
+                        String msg = "oi meu id e=:=" + id + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
 //                        Thread.sleep(10);
                         enviarMsgMulticast(msg);
                     } else {
@@ -224,6 +233,10 @@ class Peer extends Thread {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
             System.out.println("readline:" + e.getMessage());
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeySpecException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 //clientSocket.close();
@@ -273,6 +286,33 @@ class Peer extends Thread {
                     System.out.println("close:" + e.getMessage());
                 }
             }
+        }
+    }
+    
+    public void keyGenerator(){
+        int RSA_KEY_LENGTH = 512;
+        String ALGORITHM_NAME = "RSA";
+        //String PADDING_SCHEME = "OAEPWITHSHA-512ANDMGF1PADDING";
+       // String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
+        KeyPair rsaKeyPair;
+        //PublicKey publicKey;
+        //PrivateKey privateKey;
+                try {
+
+            // Generate Key Pairs
+            KeyPairGenerator rsaKeyGen = KeyPairGenerator.getInstance(ALGORITHM_NAME);
+            rsaKeyGen.initialize(RSA_KEY_LENGTH);
+            rsaKeyPair = rsaKeyGen.generateKeyPair();
+            publicKey = rsaKeyPair.getPublic();
+            privateKey = rsaKeyPair.getPrivate();
+
+            //String encryptedText = rsaEncrypt(shortMessage, publicKey);
+            //String decryptedText = rsaDecrypt(Base64.getDecoder().decode(encryptedText), privateKey) ;
+            //System.out.println("Encrypted text = " + encryptedText) ;
+            //System.out.println("Decrypted text = " + decryptedText) ;
+        } catch (Exception e) {
+            System.out.println("Exception while encryption/decryption");
+            e.printStackTrace();
         }
     }
 }
