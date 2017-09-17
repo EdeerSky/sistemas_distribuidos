@@ -17,11 +17,16 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -53,8 +58,8 @@ class Peer extends Thread {
     private int indexPort = 0;
     private long timeOfLastIndexPing = 0;
 
-    int privateKey;
-    int publicKey;
+    PrivateKey privateKey;
+    PublicKey publicKey;
 
     private boolean souIndexador;
     private ArrayList<PeerData> peerList;
@@ -69,19 +74,22 @@ class Peer extends Thread {
         try {
             id = (int) (Math.random() * 7000 + 1025);
             myIp = "localhost";
+            SecuredRSAUsage cryp = new SecuredRSAUsage();
+            privateKey = cryp.getPrivateKey();
+            publicKey = cryp.getPublicKey();
 
             souIndexador = false;
             peerList = new ArrayList<>();
             InetAddress group = InetAddress.getByName(ipMulti);
             s = new MulticastSocket(portaMulti);
             s.joinGroup(group);
-            NameAnnouncer na = new NameAnnouncer(id, ipMulti, portaMulti);
+            NameAnnouncer na = new NameAnnouncer(id, ipMulti, portaMulti, publicKey);
             this.start();
 
-            String msg = "oi meu id e=:=" + id;
-            byte[] m = msg.getBytes();
-
-            enviarMsgMulticast(msg);
+//            String msg = "oi meu id e=:=" + id;
+//            byte[] m = msg.getBytes();
+//
+//            enviarMsgMulticast(msg);
             // ligando recebedor de comandos
             cmds = new ArrayList<>();
             Thread uniListener = new Thread(new unicastListener(cmds, id));
@@ -116,9 +124,7 @@ class Peer extends Thread {
                 }
 
                 //
-                if (msg.trim().compareToIgnoreCase("sair") == 1) {
-                    System.exit(0);
-                }
+
             }
 
         } catch (IOException e) {
@@ -164,16 +170,22 @@ class Peer extends Thread {
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
                 s.receive(messageIn);
                 String recieved = new String(messageIn.getData());
-//                System.out.println("Received:" + recieved);
-                String[] parts = recieved.split("=:=");
+                System.out.println("Received:" + recieved);
+                String[] parts = recieved.split("=:=", 0);
 
                 if (parts[0].equals("oi meu id e")) {
                     int portRecebido = Integer.parseInt(parts[1].trim());
                     boolean achou = peerList.contains(new PeerData(portRecebido));
                     if (!achou) {
-                        peerList.add(new PeerData(portRecebido));
+                        // decode the base64 encoded string
+                        byte[] decodedKey = Base64.getDecoder().decode(parts[2].trim());
+                        // rebuild key using SecretKeySpec
+                        SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+                        peerList.add(new PeerData(portRecebido, (PublicKey) originalKey));
+//                        peerList.add(new PeerData(portRecebido));
+                        
                         String msg = "oi meu id e=:=" + id;
-                        Thread.sleep(10);
+//                        Thread.sleep(10);
                         enviarMsgMulticast(msg);
                     } else {
 //                        System.out.println("achei na lista já!");
@@ -181,6 +193,7 @@ class Peer extends Thread {
                     System.out.println(peerList);
 
                 }
+
                 if (parts[0].equals("sou indexador id")) {
                     int indexPortRecebido = Integer.parseInt(parts[1].trim());
 
@@ -211,8 +224,6 @@ class Peer extends Thread {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
             System.out.println("readline:" + e.getMessage());
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             try {
                 //clientSocket.close();

@@ -24,6 +24,12 @@ public class PeerData implements Comparable<PeerData> {
         port = porta;
         timeOfLastPing = System.currentTimeMillis();
     }
+    
+    public PeerData(int porta, PublicKey pk) {
+        publicKey = pk;
+        port = porta;
+        timeOfLastPing = System.currentTimeMillis();
+    }
 
     public boolean isAlive() {
         long now = System.currentTimeMillis();
