@@ -54,6 +54,9 @@ class Peer extends Thread {
 
     private boolean peercomum;
     private ArrayList<PeerData> peerList;
+    public ArrayList<String> cmds;
+    
+    Requisitions rq;
 
 
     public Peer() throws InterruptedException {
@@ -75,6 +78,13 @@ class Peer extends Thread {
 
             enviarMsgMulticast(msg);
             // ligando recebedor de comandos
+            cmds = new ArrayList<>();
+            Thread uniListener = new Thread(new unicastListener(cmds, id));
+            uniListener.start();
+            
+            rq = new Requisitions(indexPort);
+            Thread reqs = new Thread(rq);
+            reqs.start();
             
 
             while (true) {
@@ -124,6 +134,7 @@ class Peer extends Thread {
                 IndexAnnouncer ia = new IndexAnnouncer(id, ipMulti, portaMulti);
                 indexIp = myIp;
                 indexPort = id;
+                rq.updateIndex(indexPort);
             }
 
         } else {
@@ -141,7 +152,7 @@ class Peer extends Thread {
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
                 s.receive(messageIn);
                 String recieved = new String(messageIn.getData());
-                System.out.println("Received:" + recieved);
+//                System.out.println("Received:" + recieved);
                 String[] parts = recieved.split("=:=");
 
                 if (parts[0].equals("oi meu id e")) {
@@ -153,7 +164,7 @@ class Peer extends Thread {
                         Thread.sleep(10);
                         enviarMsgMulticast(msg);
                     } else {
-                        System.out.println("achei na lista já!");
+//                        System.out.println("achei na lista já!");
                     }
                     System.out.println(peerList);
 

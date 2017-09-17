@@ -17,13 +17,19 @@ import java.util.Scanner;
  * @author a1013343
  */
 public class Requisitions implements Runnable {
+
     int indexPort;
+
+    public Requisitions(int port) {
+        indexPort = port;
+    }
 
     @Override
     public void run() {
         while (true) {
             // receber comandos de compra e venda
             String cmd = "";
+            System.out.println("\n digite o comando: ");
             Scanner scan = new Scanner(System.in);
             cmd = scan.nextLine();
             // temos 2 comandos,
@@ -34,19 +40,23 @@ public class Requisitions implements Runnable {
 //                String produto = parts[1].trim();
 //                
 //            }
-            enviarMsg(cmd);
+            if (indexPort > 1) {
+                enviarMsg(cmd);
+            }else{
+                System.out.println("Index not set");
+            }
 
         }
     }
-    
-    public void updateIndex(int port){
+
+    public void updateIndex(int port) {
         indexPort = port;
     }
-    
-    public void enviarMsg(String msg){
+
+    public void enviarMsg(String msg) {
         Socket su = null;
         try {
-            int serverPort = 7896;
+//            int serverPort = 7896;
             su = new Socket("localhost", indexPort);
             DataOutputStream outuni = new DataOutputStream(su.getOutputStream());
             outuni.writeUTF(msg);
