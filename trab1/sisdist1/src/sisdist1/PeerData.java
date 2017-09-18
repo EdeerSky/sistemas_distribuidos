@@ -53,7 +53,7 @@ public class PeerData implements Comparable<PeerData> {
     public void addCmd(String p) {
         String[] partes = p.split("=:=", 0);
         if (partes[1].trim().equals("venda")) {
-            produtos.add(partes[2].trim()/*+":"+partes[3].trim()*/);
+            produtos.add(partes[2].trim()+":"+partes[3].trim());
         }
     }
 

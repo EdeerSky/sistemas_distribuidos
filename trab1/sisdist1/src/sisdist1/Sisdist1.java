@@ -159,14 +159,11 @@ class Peer extends Thread {
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
                             
-                            if ((element).produtos.contains(prts[1])) {
-    //                            element.addCmd(partes[1]);
-                                vendedores.add(element.port);
-                                //loop++;
-                                //enviarMsgUnicast(element.port+"=:=possui o item",idDoComando);
-                                //System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
-                            }else{
-                                enviarMsgUnicast(element.port+"=:=não possui o item",idDoComando);
+                            for(int loop=0;loop<element.produtos.size(); loop++) {
+                                //System.out.println("Aqui!!" + element.produtos.get(loop).substring(prts[1].length()));
+                                if ((element).produtos.contains(prts[1]+element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
+                                    vendedores.add(element.port);
+                                }
                             }
                         }
                         for(Iterator i = vendedores.iterator(); i.hasNext();) {
@@ -177,25 +174,7 @@ class Peer extends Thread {
                     
                     Thread.sleep(100);
                 }
-                /*
-                while(!compras.isEmpty()) {
-                    String cmp = compras.remove(0);
-                    String[] spt = cmp.split("=:=");
-                    for (Iterator i = peerList.iterator(); i.hasNext();) {
-                        PeerData element = (PeerData) i.next();
-
-                        if ((element).produtos.contains(spt[1])) {
-    //                            element.addCmd(partes[1]);
-                            enviarMsgUnicast(element.port+"=:=possui o item",Integer.parseInt(spt[0].trim()));
-                                //System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
-                        }else{
-                            enviarMsgUnicast(element.port+"=:=não possui o item",Integer.parseInt(spt[0].trim()));
-                        }
-                    }
-                    Thread.sleep(50);
-                }
-                */
-                //
+                
             }
 
         } catch (IOException e) {
