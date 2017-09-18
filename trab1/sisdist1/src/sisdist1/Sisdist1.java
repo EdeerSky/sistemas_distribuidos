@@ -17,6 +17,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -32,6 +33,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -81,6 +86,9 @@ class Peer extends Thread {
     */
     PrivateKey privateKey;
     PublicKey publicKey;
+    String ALGORITHM_NAME = "RSA";
+    String PADDING_SCHEME = "OAEPWITHSHA-512ANDMGF1PADDING";
+    String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
     /*
     peerList - Guarda info relevantes dos peers para uso do index
     cmds - lista de comandos recebidos por unicast ao index
@@ -95,6 +103,8 @@ class Peer extends Thread {
     Requisitions rq;
     Thread reqs;
     IndexAnnouncer ia;
+    
+    String multiVenda;
 
     public Peer() throws InterruptedException {
 
@@ -157,6 +167,7 @@ class Peer extends Thread {
                 // o loop ocorre enquanto houver comandos
                 // os comandos são do formato: id=:=venda=:=item=:=preco
                 //                             id=:=compra=:=item
+                
                 while (!cmds.isEmpty()) {
                     String comando = cmds.remove(0);
                     String[] partes = comando.split("=:=", 2);
@@ -188,11 +199,68 @@ class Peer extends Thread {
                             }
                         }
                         //envia msg unicast para o peer interesado com o numero de vendedores do item
-                        enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando); //envia o numero de vendedores do mesmo produto
+                        //enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando); //envia o numero de vendedores do mesmo produto
+                        
+                        multiVenda = (vendedores.size()+"=:=vendedores");
                         //envia msg unicast para o peer interesado no formato idvendedor=:=preco=:=possui o item
                         vendedores.forEach((element) -> {
-                            enviarMsgUnicast(element+"=:=possui o item",idDoComando); //envia os vendedores do produto + preco
+                            //final String aux = multiVenda;
+                            multiVenda = multiVenda.concat("=:="+element);
+                            //enviarMsgUnicast(element+"=:=possui o item",idDoComando); //envia os vendedores do produto + preco
                         });
+                        multiVenda = multiVenda.concat("=:="+prts[1]);
+                        enviarMsgUnicast(multiVenda, idDoComando);
+                        
+                    }
+                    //comando recebido do peer
+                    if(prts[0].equals("escolhido")) {
+                        //prts[1] - id escolhido
+                        //prts[2] - nome do item
+                        System.out.println("Eu, id "+ idDoComando +" comprarei "+prts[2]+" do "+prts[1]);
+                        enviarMsgUnicast(idDoComando+"=:=escolhido=:="+prts[1]+"=:="+prts[2],indexPort);
+                    }
+                    
+                    //comando recebido pelo index para mandar a chave pública do vendedor para o peer
+                    String chv = new String();
+                    if(prts[0].equals("sendkey")) {
+                        //prts[1] - id escolhido
+                        //prts[2] - nome do item
+                        System.out.println("Eu, id "+ idDoComando +" comprarei "+prts[2]+" do "+prts[1]);
+                        
+                        for (Iterator i = peerList.iterator(); i.hasNext();) {
+                            PeerData element = (PeerData) i.next();
+
+                            if ((element).port == Integer.parseInt(prts[1].trim())) {
+                                PublicKey chave = element.publicKey;
+                                chv = Base64.getEncoder().encodeToString(chave.getEncoded());
+                            }                            
+                        }
+                        
+                        enviarMsgUnicast(indexPort+"=:=startp2p=:="+prts[1]+"=:="+prts[2]+"=:="+chv,idDoComando);
+                    }
+                    //comando recebido pelo peer para começar o p2p para compra
+                    if(prts[0].equals("startp2p")) {
+                        //[1] - id escolhido, [2] - nome item, [3] - chave pub
+                        byte[] decodedKey = Base64.getDecoder().decode(prts[3].trim());
+                        // rebuild key using SecretKeySpec
+                        System.out.println(prts[3]);
+                        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
+                        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                        PublicKey originalKey = keyFactory.generatePublic(keySpec); 
+                        Cipher c = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
+                        c.init(Cipher.ENCRYPT_MODE, originalKey);
+                        byte[] cipherTextArray = c.doFinal((idDoComando+"=:=buystuff=:="+prts[2]).getBytes());
+                        enviarMsgUnicast("encrypted=:="+Base64.getEncoder().encodeToString(cipherTextArray),Integer.parseInt(prts[1].trim()));
+                    }
+                    
+                    if(prts[0].equals("decrypt")) {
+                        Cipher c = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
+                        c.init(Cipher.DECRYPT_MODE, privateKey);
+                        byte[] plainText = c.doFinal(Base64.getDecoder().decode(prts[1]));
+                        String originalMsg = new String (plainText);
+                        //splt[0]-idDoComando, splt[1]-buystuff, splt[2]-nome item
+                        System.out.println(originalMsg);
+                        String[] splt = originalMsg.split("=:=", 0);
                     }
                     
                     Thread.sleep(100);
@@ -202,6 +270,18 @@ class Peer extends Thread {
 
         } catch (IOException e) {
             System.out.println("Connection:" + e.getMessage());
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeySpecException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchPaddingException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalBlockSizeException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadPaddingException ex) {
+            Logger.getLogger(Peer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -366,7 +446,7 @@ class Peer extends Thread {
 
     // função para gerar as chaves da criptografia
     public void keyGenerator() {
-        int RSA_KEY_LENGTH = 512;
+        int RSA_KEY_LENGTH = 2048;
         String ALGORITHM_NAME = "RSA";
         //String PADDING_SCHEME = "OAEPWITHSHA-512ANDMGF1PADDING";
         // String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
