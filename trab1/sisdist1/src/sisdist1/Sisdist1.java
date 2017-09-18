@@ -107,6 +107,7 @@ class Peer extends Thread {
 
             while (true) {
                 long now = System.currentTimeMillis();
+
                 if (now - timeOfLastIndexPing > 6000 && indexIp != "0") {
                     System.out.println("indexador morreu !!!!!!!!!! e agora? eleição");
 //                    peerList.remove(new Integer(indexPort));
@@ -122,11 +123,12 @@ class Peer extends Thread {
                     indexPort = 0;
                     eleicao();
                 }
-//                Thread.sleep(1000);
+                Thread.sleep(1000);
 //                System.out.println("indexIp="+indexIp);
-//                System.out.println("peerList.size="+peerList.size());
-                if (indexIp == "0" && peerList.size() >= 3) {
+                //System.out.println("peerList.size="+peerList.size()+" e indexPort= "+indexPort + " " +peerList);
+                if ((peerList.size() >= 3) && (indexPort == 0)) {
                     eleicao();
+                    System.out.println("tentei eleicao");
                 }
 
                 //
@@ -139,31 +141,33 @@ class Peer extends Thread {
     }
 
     public void eleicao() {
-        if (!peerList.isEmpty()) {
+        //if (!peerList.isEmpty()) {
 
             //retirando da lista os peers que sairam
+            System.out.println(peerList);
             for (Iterator i = peerList.iterator(); i.hasNext();) {
                 PeerData element = (PeerData) i.next();
                 if (!element.isAlive()) {
                     i.remove();
                 }
             }
-
+            
             Integer voto = Collections.max(peerList).port;
-
+            //System.out.println("Estou aqui!!!");
             //enviarMsgMulticast("voto=:=" + voto.toString());
-            if (voto == id) {
+            
+            if (voto.equals(id)) {
+                //System.out.println("Escolhido");
                 enviarMsgMulticast("sou indexador id=:=" + id);
                 ia = new IndexAnnouncer(id, ipMulti, portaMulti);
                 indexIp = myIp;
                 indexPort = id;
                 rq.updateIndex(indexPort);
                 souIndexador = true;
+            } else {
             }
 
-        } else {
-            System.out.println("Sem candidatos pra eleição ainda!");
-        }
+        //}
     }
 
     // thread para escutar
@@ -176,7 +180,7 @@ class Peer extends Thread {
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
                 s.receive(messageIn);
                 String recieved = new String(messageIn.getData());
-                System.out.println("Received:" + recieved);
+                //System.out.println("Received:" + recieved);
                 String[] parts = recieved.split("=:=", 0);
 
                 if (parts[0].equals("oi meu id e")) {
@@ -190,22 +194,29 @@ class Peer extends Thread {
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                         PublicKey originalKey = keyFactory.generatePublic(keySpec);
                         //System.out.println(Base64.getEncoder().encodeToString(originalKey.getEncoded()));
-                        peerList.add(new PeerData(portRecebido, (PublicKey) originalKey));
+                        peerList.add(new PeerData(portRecebido, originalKey));
 //                        peerList.add(new PeerData(portRecebido));
                         
-                        String msg = "oi meu id e=:=" + id + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
+                        String msg = "oi meu id e=:=" + portRecebido + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
 //                        Thread.sleep(10);
                         enviarMsgMulticast(msg);
                     } else {
 //                        System.out.println("achei na lista já!");
+                        for (Iterator i = peerList.iterator(); i.hasNext();) {
+                            Object element = i.next();
+
+                            if (((PeerData) element).port == portRecebido) {
+                                ((PeerData)element).updateTime();
+                            }
+                        }
                     }
-                    System.out.println(peerList);
+
 
                 }
 
                 if (parts[0].equals("sou indexador id")) {
                     int indexPortRecebido = Integer.parseInt(parts[1].trim());
-
+                    //System.out.println("Received:" + recieved);
                     // se mais de um peer acha que é indexador
                     if (souIndexador && id != indexPortRecebido) {
                         if (id < indexPortRecebido) {
