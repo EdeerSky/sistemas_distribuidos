@@ -24,6 +24,7 @@ public class unicastListener implements Runnable {
     
     int myPort;
     ArrayList<String> cmds;
+    int vendedores=0;
     
     public unicastListener(ArrayList<String> commands, int port) {
         cmds = commands;
@@ -37,7 +38,8 @@ public class unicastListener implements Runnable {
                 ServerSocket listenSocket = new ServerSocket(myPort);
                 while (true) {
                     Socket clientSocket = listenSocket.accept();
-                    Connection c = new Connection(clientSocket, cmds);
+                    Connection c = new Connection(clientSocket, cmds, vendedores);
+                    if(c.getVendors()!=0) vendedores = c.getVendors();
                 }
             } catch (IOException ex) {
                 Logger.getLogger(unicastListener.class.getName()).log(Level.SEVERE, null, ex);
@@ -57,11 +59,12 @@ class Connection extends Thread {
     DataInputStream in;
     Socket clientSocket;
     ArrayList<String> comandos;
-    
-    public Connection(Socket aClientSocket, ArrayList<String> c) {
+    int vend;
+    public Connection(Socket aClientSocket, ArrayList<String> c, int vendedores) {
         try {
             clientSocket = aClientSocket;
             comandos = c;
+            vend = vendedores;
             //porta = prt;
             in = new DataInputStream(clientSocket.getInputStream());
             this.start();
@@ -79,15 +82,22 @@ class Connection extends Thread {
             //comando de venda-> venda=:=produto=:=preco
             //comando de compra-> compra=:=produto
             String[] splitado = data.split("=:=", 0);
-            long timeToAnswer = System.currentTimeMillis(); //se mais de 1 tiver o item, tem que dar tempo de todos responderem
+            //long timeToAnswer = System.currentTimeMillis(); //se mais de 1 tiver o item, tem que dar tempo de todos responderem
             //comandos.add(data);
             if (splitado[1].equals("venda") || splitado[1].equals("compra")) {
                 System.out.println("unicast listener receebeu> " + data);
                 comandos.add(data);
             }
-            if (splitado[1].equals("possui o item")) {
-                
+            else if (splitado[1].equals("vendedores")) { //para saber quantos peers estao vendendo o item
+                vend = Integer.parseInt(splitado[0].trim());
             }
+            else if (splitado[2].equals("possui o item")) { //contar os peers, nao funciona
+                vend--; System.out.println("Num de vend: "+String.valueOf(vend));
+                //consegue chegar aqui, recebendo algo do tipo
+                //7180=:=2=:=possui o item, id, preço..
+                // precisa comparar esses 2 preços, mas como?
+            }
+            //System.out.println("Num de vend: "+String.valueOf(vend));
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
@@ -101,6 +111,9 @@ class Connection extends Thread {
         
     }
     
+    public int getVendors() {
+        return vend;
+    }
     public void enviarMsgUnicast(String msg, int port) {
         Socket su = null;
         try {

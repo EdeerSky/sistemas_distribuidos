@@ -150,7 +150,7 @@ class Peer extends Thread {
                             System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
                         }
                     }
-                    List<Integer> vendedores = new ArrayList<Integer>();
+                    List<String> vendedores = new ArrayList<>();
                     String[] prts = partes[1].split("=:=");
                     System.out.println(prts[0]);
                     System.out.println(prts[1]);
@@ -162,14 +162,14 @@ class Peer extends Thread {
                             for(int loop=0;loop<element.produtos.size(); loop++) {
                                 //System.out.println("Aqui!!" + element.produtos.get(loop).substring(prts[1].length()));
                                 if ((element).produtos.contains(prts[1]+element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
-                                    vendedores.add(element.port);
+                                    vendedores.add(element.port+"=:="+element.produtos.get(loop).substring(prts[1].length()+1));
                                 }
                             }
                         }
-                        for(Iterator i = vendedores.iterator(); i.hasNext();) {
-                            Integer element = (Integer) i.next();
+                        enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando);
+                        vendedores.forEach((element) -> {
                             enviarMsgUnicast(element+"=:=possui o item",idDoComando);
-                        }
+                        });
                     }
                     
                     Thread.sleep(100);
