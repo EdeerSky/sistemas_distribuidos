@@ -100,7 +100,7 @@ class Peer extends Thread {
             cmds = new ArrayList<>();
             Thread uniListener = new Thread(new unicastListener(cmds, id));
             uniListener.start();
-            
+
             rq = new Requisitions(indexPort, id);
             reqs = new Thread(rq);
             reqs.start();
@@ -131,8 +131,28 @@ class Peer extends Thread {
                     System.out.println("tentei eleicao");
                 }
 
-                //
+                while (!cmds.isEmpty()) {
+                    String comando = cmds.remove(0);
+                    String[] partes = comando.split("=:=", 2);
+                    System.out.println("parte 0, depois 1");
+                    System.out.println(partes[0]);
+                    System.out.println(partes[1]);
+                    int idDoComando = Integer.parseInt(partes[0].trim());
+                    //adicionando o comando ao peer correspondente
+                    for (Iterator i = peerList.iterator(); i.hasNext();) {
+                        PeerData element = (PeerData) i.next();
 
+                        if ((element).port == idDoComando) {
+//                            element.addCmd(partes[1]);
+                            element.addCmd(comando);
+                            System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
+                        }
+                    }
+
+                    Thread.sleep(100);
+                }
+
+                //
             }
 
         } catch (IOException e) {
@@ -143,29 +163,29 @@ class Peer extends Thread {
     public void eleicao() {
         //if (!peerList.isEmpty()) {
 
-            //retirando da lista os peers que sairam
-            System.out.println(peerList);
-            for (Iterator i = peerList.iterator(); i.hasNext();) {
-                PeerData element = (PeerData) i.next();
-                if (!element.isAlive()) {
-                    i.remove();
-                }
+        //retirando da lista os peers que sairam
+        System.out.println(peerList);
+        for (Iterator i = peerList.iterator(); i.hasNext();) {
+            PeerData element = (PeerData) i.next();
+            if (!element.isAlive()) {
+                i.remove();
             }
-            
-            Integer voto = Collections.max(peerList).port;
-            //System.out.println("Estou aqui!!!");
-            //enviarMsgMulticast("voto=:=" + voto.toString());
-            
-            if (voto.equals(id)) {
-                //System.out.println("Escolhido");
-                enviarMsgMulticast("sou indexador id=:=" + id);
-                ia = new IndexAnnouncer(id, ipMulti, portaMulti);
-                indexIp = myIp;
-                indexPort = id;
-                rq.updateIndex(indexPort);
-                souIndexador = true;
-            } else {
-            }
+        }
+
+        Integer voto = Collections.max(peerList).port;
+        //System.out.println("Estou aqui!!!");
+        //enviarMsgMulticast("voto=:=" + voto.toString());
+
+        if (voto.equals(id)) {
+            //System.out.println("Escolhido");
+            enviarMsgMulticast("sou indexador id=:=" + id);
+            ia = new IndexAnnouncer(id, ipMulti, portaMulti);
+            indexIp = myIp;
+            indexPort = id;
+            rq.updateIndex(indexPort);
+            souIndexador = true;
+        } else {
+        }
 
         //}
     }
@@ -194,26 +214,25 @@ class Peer extends Thread {
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                         PublicKey originalKey = keyFactory.generatePublic(keySpec);
                         //System.out.println(Base64.getEncoder().encodeToString(originalKey.getEncoded()));
-                        peerList.add(new PeerData(portRecebido, originalKey, cmds));
-//                        peerList.add(new PeerData(portRecebido));
-                        
+                        peerList.add(new PeerData(portRecebido, originalKey));
+//                        peerList.add(new PeerData(portRecebido, originalKey));
+
                         String msg = "oi meu id e=:=" + portRecebido + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
 //                        Thread.sleep(10);
                         enviarMsgMulticast(msg);
                     } else {
 //                        System.out.println("achei na lista já!");
-                      
+
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             Object element = i.next();
 
                             if (((PeerData) element).port == portRecebido) {
-                                ((PeerData)element).updateTime();
+                                ((PeerData) element).updateTime();
                                 //if(((PeerData)element).produtos)
-                                System.out.println(((PeerData)element).produtos);
+//                                System.out.println(((PeerData) element).produtos);
                             }
                         }
                     }
-
 
                 }
 
@@ -301,16 +320,16 @@ class Peer extends Thread {
             }
         }
     }
-    
-    public void keyGenerator(){
+
+    public void keyGenerator() {
         int RSA_KEY_LENGTH = 512;
         String ALGORITHM_NAME = "RSA";
         //String PADDING_SCHEME = "OAEPWITHSHA-512ANDMGF1PADDING";
-       // String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
+        // String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
         KeyPair rsaKeyPair;
         //PublicKey publicKey;
         //PrivateKey privateKey;
-                try {
+        try {
 
             // Generate Key Pairs
             KeyPairGenerator rsaKeyGen = KeyPairGenerator.getInstance(ALGORITHM_NAME);

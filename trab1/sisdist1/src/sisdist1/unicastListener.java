@@ -19,15 +19,15 @@ import java.util.logging.Logger;
  * @author samot
  */
 public class unicastListener implements Runnable {
-
+    
     int myPort;
     ArrayList<String> cmds;
-
+    
     public unicastListener(ArrayList<String> commands, int port) {
         cmds = commands;
         myPort = port;
     }
-
+    
     @Override
     public void run() {
         if (myPort > 1) {
@@ -40,21 +40,22 @@ public class unicastListener implements Runnable {
             } catch (IOException ex) {
                 Logger.getLogger(unicastListener.class.getName()).log(Level.SEVERE, null, ex);
             }
-
+            
         }
     }
-
+    
     public void updatePort(int port) {
         myPort = port;
     }
-
+    
 }
 
 class Connection extends Thread {
-
+    
     DataInputStream in;
     Socket clientSocket;
     ArrayList<String> comandos;
+    
     public Connection(Socket aClientSocket, ArrayList<String> c) {
         try {
             clientSocket = aClientSocket;
@@ -66,23 +67,22 @@ class Connection extends Thread {
             System.out.println("Connection:" + e.getMessage());
         }
     }
-
+    
     public void run() {
         try {			                 // an echo server
 
             String data = in.readUTF();	                  // read a line of data from the stream
-            System.out.print("recebi por unicast:" + data);
-                        //TODO cod pra criptografar aqui
+            System.out.print("\nrecebi por unicast:" + data);
+            //TODO cod pra criptografar aqui
             //comando de venda-> venda=:=produto=:=preco
             //comando de compra-> compra=:=produto
-            String[] splitado = data.split("=:=",0);
+            String[] splitado = data.split("=:=", 0);
             //comandos.add(data);
-            if(splitado[1].equals("venda")) {
-                comandos.add(data.trim());
+            if (splitado[1].equals("venda") || splitado[1].equals("compra")) {
+                System.out.println("unicast listener receebeu> " + data);
+                comandos.add(data);
             }
-            if(splitado[1].equals("compra")) {
-                comandos.add(data.trim());
-            }
+            
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
@@ -93,8 +93,7 @@ class Connection extends Thread {
             } catch (IOException e) {/*close failed*/
             }
         }
-
+        
     }
     
-
 }

@@ -10,6 +10,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -21,11 +22,13 @@ public class Requisitions implements Runnable {
     int indexPort;
     public boolean on;
     int id;
+    ArrayList<String> aVenda;
 
     public Requisitions(int port, int myId) {
         indexPort = port;
         on = true;
         id = myId;
+        aVenda = new ArrayList<>();
     }
 
     @Override
@@ -45,7 +48,10 @@ public class Requisitions implements Runnable {
 //                
 //            }
             if (indexPort > 1) {
-                enviarMsg(id+"=:="+cmd);
+                String aenviar = id + "=:=" + cmd;
+                System.out.println(aenviar);
+                aVenda.add(aenviar);
+                enviarMsg(aenviar);
             } else {
                 System.out.println("Index not set");
             }
