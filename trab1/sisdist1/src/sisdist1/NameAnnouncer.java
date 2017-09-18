@@ -17,10 +17,7 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author a1013343
- */
+
 public class NameAnnouncer {
 
     int intervalo = 5000;
@@ -32,10 +29,11 @@ public class NameAnnouncer {
     MulticastSocket s = null;
     InetAddress group;
     DatagramPacket messageOut;
-
+    // mensagem é o id
     public NameAnnouncer(int mensagem, String ip, int porta, PublicKey pk) {
         String encodedKey = null;
         if (pk != null) {
+            //converte a chave em string para poder enviar por msg
             encodedKey = Base64.getEncoder().encodeToString(pk.getEncoded());
         }
         if (encodedKey == null) {
@@ -46,11 +44,13 @@ public class NameAnnouncer {
         portaMulti = porta;
         pbk = pk;
         try {
+            //entra no grupo multicast
             group = InetAddress.getByName(ipMulti);
             s = new MulticastSocket(portaMulti);
             s.joinGroup(group);
             byte[] m = msg.getBytes();
             messageOut = new DatagramPacket(m, m.length, group, portaMulti);
+            //envia a msg a cada período de tempo utilizando um timer
             TimerTask timerTask = new TimerTask() {
 
                 @Override

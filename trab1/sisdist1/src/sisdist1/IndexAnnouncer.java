@@ -29,19 +29,21 @@ public class IndexAnnouncer {
     InetAddress group;
     DatagramPacket messageOut;
     public boolean on;
-
+    // mensagem é o id
     public IndexAnnouncer(int mensagem, String ip, int porta) {
         msg = "sou indexador id=:=" + Integer.toString(mensagem);
         ipMulti = ip;
         portaMulti = porta;
         on = true;
         try {
+            //entra no grupo multicast
             group = InetAddress.getByName(ipMulti);
             s = new MulticastSocket(portaMulti);
             s.joinGroup(group);
             byte[] m = msg.getBytes();
             messageOut = new DatagramPacket(m, m.length, group, portaMulti);
             System.out.println("Eu sou indexador, id=" + Integer.toString(mensagem));
+            //envia a msg a cada período de tempo utilizando um timer
             TimerTask timerTask = new TimerTask() {
 
                 @Override

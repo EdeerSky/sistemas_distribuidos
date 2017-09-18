@@ -8,37 +8,25 @@ package sisdist1;
 import java.security.PublicKey;
 import java.util.ArrayList;
 
-/**
- *
- * @author samot
- */
 public class PeerData implements Comparable<PeerData> {
 
     public int port;
-//    public int isIndex;
     public long timeOfLastPing;
     public PublicKey publicKey;
     public ArrayList<String> produtos;
-
+    //construtor apenas com porta
     public PeerData(int porta) {
         port = porta;
         timeOfLastPing = System.currentTimeMillis();
     }
-
+    //construtor com porta e publickey
     public PeerData(int porta, PublicKey pk) {
         publicKey = pk;
         port = porta;
         produtos = new ArrayList<>();
         timeOfLastPing = System.currentTimeMillis();
     }
-
-    public PeerData(int porta, PublicKey pk, ArrayList<String> prd) {
-        publicKey = pk;
-        port = porta;
-        produtos = prd;
-        timeOfLastPing = System.currentTimeMillis();
-    }
-
+    //checar se o peer esta funcional
     public boolean isAlive() {
         long now = System.currentTimeMillis();
         if (now - timeOfLastPing > 5010) {
@@ -49,14 +37,14 @@ public class PeerData implements Comparable<PeerData> {
 //        System.out.println("not dead yet");
         return true;
     }
-
+    //adiciona os produtos a serem vendidos na lista de produtos
     public void addCmd(String p) {
         String[] partes = p.split("=:=", 0);
         if (partes[1].trim().equals("venda")) {
             produtos.add(partes[2].trim()+":"+partes[3].trim());
         }
     }
-
+    //faz o update do tempo para o keep alive
     public void updateTime() {
         timeOfLastPing = System.currentTimeMillis();
     }

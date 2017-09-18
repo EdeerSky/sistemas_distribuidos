@@ -16,10 +16,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author samot
- */
+
 public class unicastListener implements Runnable {
     
     int myPort;
@@ -82,22 +79,31 @@ class Connection extends Thread {
             //comando de venda-> venda=:=produto=:=preco
             //comando de compra-> compra=:=produto
             String[] splitado = data.split("=:=", 0);
-            //long timeToAnswer = System.currentTimeMillis(); //se mais de 1 tiver o item, tem que dar tempo de todos responderem
-            //comandos.add(data);
+            //se recebeu um comando do requisitions (começando com venda ou compra)
+            //->adiciona a lista de comandos
             if (splitado[1].equals("venda") || splitado[1].equals("compra")) {
                 System.out.println("unicast listener receebeu> " + data);
                 comandos.add(data);
             }
-            else if (splitado[1].equals("vendedores")) { //para saber quantos peers estao vendendo o item
+            //index responde quantos vendedores existem de tal item
+            else if (splitado[1].equals("vendedores")) { 
                 vend = Integer.parseInt(splitado[0].trim());
             }
+            //recebe x msgs do tipo id=:=preco=:=possui o item,dependendo quantos
+            //desse item existe a venda
             else if (splitado[2].equals("possui o item")) { //contar os peers, nao funciona
                 vend--; System.out.println("Num de vend: "+String.valueOf(vend));
                 //consegue chegar aqui, recebendo algo do tipo
                 //7180=:=2=:=possui o item, id, preço..
-                // precisa comparar esses 2 preços, mas como?
+                //porem não sei como guardar que recebeu 2x (o vend nao funciona)
+                // se conseguir isso, da pra comparar e ver qual tem menor preço
+                //mandando msgUnicast pra o index "meuid=:=id=:=item=:=comprarei"
+                //entao o index retorna a chave publica do vendedor
+                //comprador manda msg cripto pro vendedor falando da compra
+                //vendedor responde confirmando e avisa o index para retirar da lista
+                //comprador anuncia compra
+                // precisa comparar esses preços, mas como?
             }
-            //System.out.println("Num de vend: "+String.valueOf(vend));
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {

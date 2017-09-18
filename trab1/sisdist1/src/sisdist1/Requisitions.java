@@ -14,10 +14,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
 
-/**
- *
- * @author a1013343
- */
+/*
+TO-DO: retirar itens vendidos do aVenda
+*/
+
 public class Requisitions implements Runnable {
 
     int indexPort;
@@ -40,18 +40,12 @@ public class Requisitions implements Runnable {
             System.out.println("\n digite o comando: ");
             Scanner scan = new Scanner(System.in);
             cmd = scan.nextLine();
-            // temos 2 comandos,
-            // comprar=:=banana
-            // vender=:=banana
-//            String[] parts = cmd.split("=:=");
-//            if(parts[0].trim() == "vender"){
-//                String produto = parts[1].trim();
-//                
-//            }
+
             if (indexPort > 1) {
+                //envia o comando junto com o id automaticamente
                 String aenviar = id + "=:=" + cmd;
-                //System.out.println(aenviar);
                 String[] splitter = cmd.split("=:=",0);
+                //guarda os itens anunciados caso o index caia
                 if(splitter[0].equals("venda"))
                 aVenda.add(aenviar);
                 enviarMsg(aenviar);
@@ -63,6 +57,7 @@ public class Requisitions implements Runnable {
     }
 
     public void updateIndex(int port) {
+        //se o index mudou, manda novamente os itens anunciados para o novo index
         if(indexPort!=port){
             indexPort = port;
             on = true;

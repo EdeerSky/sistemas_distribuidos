@@ -37,7 +37,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
- * @author aaaaaaaaaaaaaaaaaa
+ * @authors Jimmy Yuji Tanamati Soares
+ * @authors Tomás Abril
  */
 public class Sisdist1 {
 
@@ -52,27 +53,45 @@ public class Sisdist1 {
 
 class Peer extends Thread {
 
-    DataInputStream in;
-    DataOutputStream out;
+    //DataInputStream in;
+    //DataOutputStream out;
     //Socket clientSocket;
+    /*
+    Definição do ip e porta Multicast, que é o mesmo para todos os peers
+    */
     String ipMulti = "224.0.0.251";
     int portaMulti = 6789;
     MulticastSocket s = null;
 
+    /*
+    myIp - ip local, no caso sempre localhost
+    id - porta unicast
+    indexIp/Port - guardar as informações do indexador
+    timeOfLastIndexPing - para fazer o dT e saber se existe falha no index
+    souIndexador - saber se o proprio peer é o index
+    */
     private String myIp;
     private int id;
     private String indexIp = "0";
     private int indexPort = 0;
     private long timeOfLastIndexPing = 0;
-
+    private boolean souIndexador;
+    /*
+    chaves para a criptografia da venda/compra
+    */
     PrivateKey privateKey;
     PublicKey publicKey;
-
-    private boolean souIndexador;
+    /*
+    peerList - Guarda info relevantes dos peers para uso do index
+    cmds - lista de comandos recebidos por unicast ao index
+    */
     private ArrayList<PeerData> peerList;
     public ArrayList<String> cmds;
 
-
+    /*
+    rq/reqs - thread para enviar comandos unicast
+    ia - anuncio do indexador
+    */
     Requisitions rq;
     Thread reqs;
     IndexAnnouncer ia;
@@ -80,39 +99,40 @@ class Peer extends Thread {
     public Peer() throws InterruptedException {
 
         try {
+            // id é um numero aleatorio no range das portas unicast
             id = (int) (Math.random() * 7000 + 1025);
             myIp = "localhost";
-            //SecuredRSAUsage cryp = new SecuredRSAUsage();
-            //privateKey = cryp.getPrivateKey();
-            //publicKey = cryp.getPublicKey();
+            // gera as chaves para criptografia
             keyGenerator();
             souIndexador = false;
             peerList = new ArrayList<>();
+            // entra no grupo multicast
             InetAddress group = InetAddress.getByName(ipMulti);
             s = new MulticastSocket(portaMulti);
             s.joinGroup(group);
+            // cria a thread para o peer anunciar que está vivo
             NameAnnouncer na = new NameAnnouncer(id, ipMulti, portaMulti, publicKey);
             this.start();
 
-//            String msg = "oi meu id e=:=" + id;
-//            byte[] m = msg.getBytes();
-//
-//            enviarMsgMulticast(msg);
-            // ligando recebedor de comandos
+            // ligando recebedor de comandos, mensagens unicast
             cmds = new ArrayList<>();
             Thread uniListener = new Thread(new unicastListener(cmds, id));
             uniListener.start();
 
+            // inicia a thread para enviar comandos unicast
             rq = new Requisitions(indexPort, id);
             reqs = new Thread(rq);
             reqs.start();
 
             while (true) {
+                /* 
+                pega o tempo atual e compara com a ultima vez que o indexador
+                se anunciou, caso seja longo demais e existir um indexador já eleito,
+                -> remove o indexador e promove eleição
+                */
                 long now = System.currentTimeMillis();
-
                 if (now - timeOfLastIndexPing > 6000 && indexIp != "0") {
                     System.out.println("indexador morreu !!!!!!!!!! e agora? eleição");
-//                    peerList.remove(new Integer(indexPort));
                     //retirando da lista
                     for (Iterator i = peerList.iterator(); i.hasNext();) {
                         Object element = i.next();
@@ -125,48 +145,51 @@ class Peer extends Thread {
                     indexPort = 0;
                     eleicao();
                 }
+                //necessário ou não entra no if abaixo
                 Thread.sleep(1000);
-//                System.out.println("indexIp="+indexIp);
-                //System.out.println("peerList.size="+peerList.size()+" e indexPort= "+indexPort + " " +peerList);
-                if ((peerList.size() >= 3) && (indexPort == 0)) {
+                //se tiver ao menos 4 peers conectados e nenhum indexador definido,
+                //-> promove eleicao
+                if ((peerList.size() >= 4) && (indexPort == 0)) {
                     eleicao();
-                    System.out.println("tentei eleicao");
                 }
 
+                // os comandos são processados e retirados da lista, por isso
+                // o loop ocorre enquanto houver comandos
+                // os comandos são do formato: id=:=venda=:=item=:=preco
+                //                             id=:=compra=:=item
                 while (!cmds.isEmpty()) {
                     String comando = cmds.remove(0);
                     String[] partes = comando.split("=:=", 2);
-                    System.out.println("parte 0, depois 1");
-                    System.out.println(partes[0]);
-                    System.out.println(partes[1]);
                     Integer idDoComando = Integer.parseInt(partes[0].trim());
-                    //adicionando o comando ao peer correspondente
+                    //adicionando o item anunciado ao peer correspondente
                     for (Iterator i = peerList.iterator(); i.hasNext();) {
                         PeerData element = (PeerData) i.next();
 
                         if ((element).port == idDoComando) {
-//                            element.addCmd(partes[1]);
                             element.addCmd(comando);
-                            System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
+                            System.out.println("Produto do peer " + element.port + " > " + element.produtos);
                         }
                     }
+                    
+                    //lista de vendedores
                     List<String> vendedores = new ArrayList<>();
                     String[] prts = partes[1].split("=:=");
-                    System.out.println(prts[0]);
-                    System.out.println(prts[1]);
                     
                     if(prts[0].equals("compra")) {
+                        //para cada peer, verifica se ele possui o item a venda, 
+                        //adicionando na lista de vendedores caso tenha com o preço do item
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
                             
                             for(int loop=0;loop<element.produtos.size(); loop++) {
-                                //System.out.println("Aqui!!" + element.produtos.get(loop).substring(prts[1].length()));
                                 if ((element).produtos.contains(prts[1]+element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
                                     vendedores.add(element.port+"=:="+element.produtos.get(loop).substring(prts[1].length()+1));
                                 }
                             }
                         }
+                        //envia msg unicast para o peer interesado com o numero de vendedores do item
                         enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando); //envia o numero de vendedores do mesmo produto
+                        //envia msg unicast para o peer interesado no formato idvendedor=:=preco=:=possui o item
                         vendedores.forEach((element) -> {
                             enviarMsgUnicast(element+"=:=possui o item",idDoComando); //envia os vendedores do produto + preco
                         });
@@ -182,9 +205,7 @@ class Peer extends Thread {
         }
     }
 
-    public void eleicao() {
-        //if (!peerList.isEmpty()) {
-
+    public void eleicao() {   
         //retirando da lista os peers que sairam
         System.out.println(peerList);
         for (Iterator i = peerList.iterator(); i.hasNext();) {
@@ -193,41 +214,43 @@ class Peer extends Thread {
                 i.remove();
             }
         }
-
+        //irá eleger o peer com o maior número de port unicast
         Integer voto = Collections.max(peerList).port;
-        //System.out.println("Estou aqui!!!");
-        //enviarMsgMulticast("voto=:=" + voto.toString());
 
+        /*
+        se for o proprio peer, inicia o anuncio de que é o index,
+        arruma os parâmetros locais e da um update na Thread rq,
+        que envia msgs unicast ao index
+        */
         if (voto.equals(id)) {
-            //System.out.println("Escolhido");
             enviarMsgMulticast("sou indexador id=:=" + id);
             ia = new IndexAnnouncer(id, ipMulti, portaMulti);
             indexIp = myIp;
             indexPort = id;
             rq.updateIndex(indexPort);
             souIndexador = true;
-        } else {
         }
-
-        //}
     }
 
-    // thread para escutar
+    // thread para escutar msgs Multicast
     @Override
     public void run() {
-        try {			                 // an echo server
+        try {			               
             System.out.println("comecando a escutar...");
             while (true) {
                 byte[] buffer = new byte[1000];
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
                 s.receive(messageIn);
                 String recieved = new String(messageIn.getData());
-                //System.out.println("Received:" + recieved);
                 String[] parts = recieved.split("=:=", 0);
-
+                //escuta o keep alive dos peers normais
+                //oi meu id e=:=id=:=publicKey
                 if (parts[0].equals("oi meu id e")) {
                     int portRecebido = Integer.parseInt(parts[1].trim());
                     boolean achou = peerList.contains(new PeerData(portRecebido));
+                    //se não esta na peerList, decodifica a publicKey do peer de
+                    //String para objeto PublicKey e então adiciona a peerList
+                    //o id e sua chave publica
                     if (!achou) {
                         // decode the base64 encoded string
                         byte[] decodedKey = Base64.getDecoder().decode(parts[2].trim());
@@ -237,14 +260,11 @@ class Peer extends Thread {
                         PublicKey originalKey = keyFactory.generatePublic(keySpec);
                         //System.out.println(Base64.getEncoder().encodeToString(originalKey.getEncoded()));
                         peerList.add(new PeerData(portRecebido, originalKey));
-//                        peerList.add(new PeerData(portRecebido, originalKey));
-
                         String msg = "oi meu id e=:=" + portRecebido + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
-//                        Thread.sleep(10);
                         enviarMsgMulticast(msg);
                     } else {
-//                        System.out.println("achei na lista já!");
-
+                    //caso já tenha o peer adicionado, da um update do tempo de
+                    //vida e checa se esta operante, caso não esteja é removido
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
 
@@ -258,10 +278,11 @@ class Peer extends Thread {
                     }
 
                 }
-
+                
+                //escuta o keep alive do indexador
+                //sou indexador id=:=id
                 if (parts[0].equals("sou indexador id")) {
                     int indexPortRecebido = Integer.parseInt(parts[1].trim());
-                    //System.out.println("Received:" + recieved);
                     // se mais de um peer acha que é indexador
                     if (souIndexador && id != indexPortRecebido) {
                         if (id < indexPortRecebido) {
@@ -269,9 +290,6 @@ class Peer extends Thread {
                             System.out.println("Vou deixar o outreo ser index");
                             souIndexador = false;
                             ia.on = false;
-//                            rq.turnOff();
-//                            reqs.stop();
-//                            reqs.interrupt();
                         }
                     }
                     if (indexPort != indexPortRecebido) {
@@ -303,6 +321,7 @@ class Peer extends Thread {
 
     }
 
+    // função para enviar msg multicast
     public void enviarMsgMulticast(String msg) {
         InetAddress group;
         try {
@@ -321,6 +340,7 @@ class Peer extends Thread {
 
     }
 
+    // função para enviar msg unicast
     public void enviarMsgUnicast(String msg, int port) {
         Socket su = null;
         try {
@@ -344,14 +364,13 @@ class Peer extends Thread {
         }
     }
 
+    // função para gerar as chaves da criptografia
     public void keyGenerator() {
         int RSA_KEY_LENGTH = 512;
         String ALGORITHM_NAME = "RSA";
         //String PADDING_SCHEME = "OAEPWITHSHA-512ANDMGF1PADDING";
         // String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
         KeyPair rsaKeyPair;
-        //PublicKey publicKey;
-        //PrivateKey privateKey;
         try {
 
             // Generate Key Pairs
