@@ -43,7 +43,7 @@ public class PeerData implements Comparable<PeerData> {
         long now = System.currentTimeMillis();
         if (now - timeOfLastPing > 5010) {
             // nao está respondendo
-            System.out.println("Its dead jim");
+            //System.out.println("Its dead jim");
             return false;
         }
 //        System.out.println("not dead yet");

@@ -50,7 +50,7 @@ public class Requisitions implements Runnable {
 //            }
             if (indexPort > 1) {
                 String aenviar = id + "=:=" + cmd;
-                System.out.println(aenviar);
+                //System.out.println(aenviar);
                 String[] splitter = cmd.split("=:=",0);
                 if(splitter[0].equals("venda"))
                 aVenda.add(aenviar);

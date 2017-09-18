@@ -166,9 +166,9 @@ class Peer extends Thread {
                                 }
                             }
                         }
-                        enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando);
+                        enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando); //envia o numero de vendedores do mesmo produto
                         vendedores.forEach((element) -> {
-                            enviarMsgUnicast(element+"=:=possui o item",idDoComando);
+                            enviarMsgUnicast(element+"=:=possui o item",idDoComando); //envia os vendedores do produto + preco
                         });
                     }
                     
@@ -246,12 +246,13 @@ class Peer extends Thread {
 //                        System.out.println("achei na lista já!");
 
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
-                            Object element = i.next();
+                            PeerData element = (PeerData) i.next();
 
                             if (((PeerData) element).port == portRecebido) {
                                 ((PeerData) element).updateTime();
-                                //if(((PeerData)element).produtos)
-//                               System.out.println(((PeerData) element).produtos);
+                            }
+                            if (!element.isAlive()) {
+                                i.remove();
                             }
                         }
                     }
