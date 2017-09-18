@@ -41,6 +41,7 @@ public class IndexAnnouncer {
             s.joinGroup(group);
             byte[] m = msg.getBytes();
             messageOut = new DatagramPacket(m, m.length, group, portaMulti);
+            System.out.println("Eu sou indexador, id=" + Integer.toString(mensagem));
             TimerTask timerTask = new TimerTask() {
 
                 @Override
@@ -48,7 +49,7 @@ public class IndexAnnouncer {
                     try {
                         if (on) {
                             s.send(messageOut);
-                            System.out.println("Eu sou indexador, id=" + Integer.toString(mensagem));
+                            //System.out.println("Eu sou indexador, id=" + Integer.toString(mensagem));
                         }
                     } catch (IOException ex) {
                         Logger.getLogger(IndexAnnouncer.class.getName()).log(Level.SEVERE, null, ex);

@@ -6,10 +6,12 @@
 package sisdist1;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,17 +74,20 @@ class Connection extends Thread {
         try {			                 // an echo server
 
             String data = in.readUTF();	                  // read a line of data from the stream
-            System.out.print("\nrecebi por unicast:" + data);
+            System.out.println("\nrecebi por unicast:" + data);
             //TODO cod pra criptografar aqui
             //comando de venda-> venda=:=produto=:=preco
             //comando de compra-> compra=:=produto
             String[] splitado = data.split("=:=", 0);
+            long timeToAnswer = System.currentTimeMillis(); //se mais de 1 tiver o item, tem que dar tempo de todos responderem
             //comandos.add(data);
             if (splitado[1].equals("venda") || splitado[1].equals("compra")) {
                 System.out.println("unicast listener receebeu> " + data);
                 comandos.add(data);
             }
-            
+            if (splitado[1].equals("possui o item")) {
+                
+            }
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
@@ -96,4 +101,26 @@ class Connection extends Thread {
         
     }
     
+    public void enviarMsgUnicast(String msg, int port) {
+        Socket su = null;
+        try {
+            su = new Socket("localhost", port);
+            DataOutputStream outuni = new DataOutputStream(su.getOutputStream());
+            outuni.writeUTF(msg);
+        } catch (UnknownHostException e) {
+            System.out.println("Socket:" + e.getMessage());
+        } catch (EOFException e) {
+            System.out.println("EOF:" + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("readline:" + e.getMessage());
+        } finally {
+            if (su != null) {
+                try {
+                    su.close();
+                } catch (IOException e) {
+                    System.out.println("close:" + e.getMessage());
+                }
+            }
+        }
+    }
 }

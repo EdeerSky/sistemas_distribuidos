@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 
 /**
@@ -50,6 +51,8 @@ public class Requisitions implements Runnable {
             if (indexPort > 1) {
                 String aenviar = id + "=:=" + cmd;
                 System.out.println(aenviar);
+                String[] splitter = cmd.split("=:=",0);
+                if(splitter[0].equals("venda"))
                 aVenda.add(aenviar);
                 enviarMsg(aenviar);
             } else {
@@ -60,12 +63,22 @@ public class Requisitions implements Runnable {
     }
 
     public void updateIndex(int port) {
-        indexPort = port;
-        on = true;
+        if(indexPort!=port){
+            indexPort = port;
+            on = true;
+            for(Iterator i = aVenda.iterator(); i.hasNext();) {
+                String element = (String) i.next();
+                enviarMsg(element);
+            }
+        }
     }
 
     public void turnOff() {
         on = false;
+    }
+    
+    public ArrayList<String> getVendas() {
+        return aVenda;
     }
 
     public void enviarMsg(String msg) {

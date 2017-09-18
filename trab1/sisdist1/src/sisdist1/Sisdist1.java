@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKey;
@@ -70,6 +71,7 @@ class Peer extends Thread {
     private boolean souIndexador;
     private ArrayList<PeerData> peerList;
     public ArrayList<String> cmds;
+
 
     Requisitions rq;
     Thread reqs;
@@ -137,7 +139,7 @@ class Peer extends Thread {
                     System.out.println("parte 0, depois 1");
                     System.out.println(partes[0]);
                     System.out.println(partes[1]);
-                    int idDoComando = Integer.parseInt(partes[0].trim());
+                    Integer idDoComando = Integer.parseInt(partes[0].trim());
                     //adicionando o comando ao peer correspondente
                     for (Iterator i = peerList.iterator(); i.hasNext();) {
                         PeerData element = (PeerData) i.next();
@@ -148,10 +150,51 @@ class Peer extends Thread {
                             System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
                         }
                     }
-
+                    List<Integer> vendedores = new ArrayList<Integer>();
+                    String[] prts = partes[1].split("=:=");
+                    System.out.println(prts[0]);
+                    System.out.println(prts[1]);
+                    
+                    if(prts[0].equals("compra")) {
+                        for (Iterator i = peerList.iterator(); i.hasNext();) {
+                            PeerData element = (PeerData) i.next();
+                            
+                            if ((element).produtos.contains(prts[1])) {
+    //                            element.addCmd(partes[1]);
+                                vendedores.add(element.port);
+                                //loop++;
+                                //enviarMsgUnicast(element.port+"=:=possui o item",idDoComando);
+                                //System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
+                            }else{
+                                enviarMsgUnicast(element.port+"=:=não possui o item",idDoComando);
+                            }
+                        }
+                        for(Iterator i = vendedores.iterator(); i.hasNext();) {
+                            Integer element = (Integer) i.next();
+                            enviarMsgUnicast(element+"=:=possui o item",idDoComando);
+                        }
+                    }
+                    
                     Thread.sleep(100);
                 }
+                /*
+                while(!compras.isEmpty()) {
+                    String cmp = compras.remove(0);
+                    String[] spt = cmp.split("=:=");
+                    for (Iterator i = peerList.iterator(); i.hasNext();) {
+                        PeerData element = (PeerData) i.next();
 
+                        if ((element).produtos.contains(spt[1])) {
+    //                            element.addCmd(partes[1]);
+                            enviarMsgUnicast(element.port+"=:=possui o item",Integer.parseInt(spt[0].trim()));
+                                //System.out.println("Produtos do peer " + element.port + " > " + element.produtos);
+                        }else{
+                            enviarMsgUnicast(element.port+"=:=não possui o item",Integer.parseInt(spt[0].trim()));
+                        }
+                    }
+                    Thread.sleep(50);
+                }
+                */
                 //
             }
 
@@ -229,7 +272,7 @@ class Peer extends Thread {
                             if (((PeerData) element).port == portRecebido) {
                                 ((PeerData) element).updateTime();
                                 //if(((PeerData)element).produtos)
-//                                System.out.println(((PeerData) element).produtos);
+//                               System.out.println(((PeerData) element).produtos);
                             }
                         }
                     }
