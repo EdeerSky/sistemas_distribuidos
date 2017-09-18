@@ -30,7 +30,14 @@ public class PeerData implements Comparable<PeerData> {
         port = porta;
         timeOfLastPing = System.currentTimeMillis();
     }
-
+    
+    public PeerData(int porta, PublicKey pk, ArrayList<String> prd) {
+        publicKey = pk;
+        port = porta;
+        produtos = prd;
+        timeOfLastPing = System.currentTimeMillis();
+    }
+        
     public boolean isAlive() {
         long now = System.currentTimeMillis();
         if (now - timeOfLastPing > 5010) {

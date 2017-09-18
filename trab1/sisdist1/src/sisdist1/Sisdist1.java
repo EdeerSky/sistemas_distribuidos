@@ -100,8 +100,8 @@ class Peer extends Thread {
             cmds = new ArrayList<>();
             Thread uniListener = new Thread(new unicastListener(cmds, id));
             uniListener.start();
-
-            rq = new Requisitions(indexPort);
+            
+            rq = new Requisitions(indexPort, id);
             reqs = new Thread(rq);
             reqs.start();
 
@@ -194,7 +194,7 @@ class Peer extends Thread {
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                         PublicKey originalKey = keyFactory.generatePublic(keySpec);
                         //System.out.println(Base64.getEncoder().encodeToString(originalKey.getEncoded()));
-                        peerList.add(new PeerData(portRecebido, originalKey));
+                        peerList.add(new PeerData(portRecebido, originalKey, cmds));
 //                        peerList.add(new PeerData(portRecebido));
                         
                         String msg = "oi meu id e=:=" + portRecebido + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
@@ -202,11 +202,14 @@ class Peer extends Thread {
                         enviarMsgMulticast(msg);
                     } else {
 //                        System.out.println("achei na lista já!");
+                      
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             Object element = i.next();
 
                             if (((PeerData) element).port == portRecebido) {
                                 ((PeerData)element).updateTime();
+                                //if(((PeerData)element).produtos)
+                                System.out.println(((PeerData)element).produtos);
                             }
                         }
                     }
@@ -276,11 +279,10 @@ class Peer extends Thread {
 
     }
 
-    public void enviarMsgUnicast(String msg, String ip, int port) {
+    public void enviarMsgUnicast(String msg, int port) {
         Socket su = null;
         try {
-            int serverPort = 7896;
-            su = new Socket(ip, port);
+            su = new Socket("localhost", port);
             DataOutputStream outuni = new DataOutputStream(su.getOutputStream());
             outuni.writeUTF(msg);
         } catch (UnknownHostException e) {

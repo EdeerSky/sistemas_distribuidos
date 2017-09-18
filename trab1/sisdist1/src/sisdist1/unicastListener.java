@@ -35,7 +35,7 @@ public class unicastListener implements Runnable {
                 ServerSocket listenSocket = new ServerSocket(myPort);
                 while (true) {
                     Socket clientSocket = listenSocket.accept();
-                    Connection c = new Connection(clientSocket);
+                    Connection c = new Connection(clientSocket, cmds);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(unicastListener.class.getName()).log(Level.SEVERE, null, ex);
@@ -54,10 +54,12 @@ class Connection extends Thread {
 
     DataInputStream in;
     Socket clientSocket;
-
-    public Connection(Socket aClientSocket) {
+    ArrayList<String> comandos;
+    public Connection(Socket aClientSocket, ArrayList<String> c) {
         try {
             clientSocket = aClientSocket;
+            comandos = c;
+            //porta = prt;
             in = new DataInputStream(clientSocket.getInputStream());
             this.start();
         } catch (IOException e) {
@@ -70,6 +72,17 @@ class Connection extends Thread {
 
             String data = in.readUTF();	                  // read a line of data from the stream
             System.out.print("recebi por unicast:" + data);
+                        //TODO cod pra criptografar aqui
+            //comando de venda-> venda=:=produto=:=preco
+            //comando de compra-> compra=:=produto
+            String[] splitado = data.split("=:=",0);
+            //comandos.add(data);
+            if(splitado[1].equals("venda")) {
+                comandos.add(data.trim());
+            }
+            if(splitado[1].equals("compra")) {
+                comandos.add(data.trim());
+            }
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
@@ -82,4 +95,6 @@ class Connection extends Thread {
         }
 
     }
+    
+
 }

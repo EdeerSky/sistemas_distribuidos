@@ -20,10 +20,12 @@ public class Requisitions implements Runnable {
 
     int indexPort;
     public boolean on;
+    int id;
 
-    public Requisitions(int port) {
+    public Requisitions(int port, int myId) {
         indexPort = port;
         on = true;
+        id = myId;
     }
 
     @Override
@@ -43,7 +45,7 @@ public class Requisitions implements Runnable {
 //                
 //            }
             if (indexPort > 1) {
-                enviarMsg(cmd);
+                enviarMsg(id+"=:="+cmd);
             } else {
                 System.out.println("Index not set");
             }
