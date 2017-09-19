@@ -171,20 +171,22 @@ class Peer extends Thread {
                 while (!cmds.isEmpty()) {
                     String comando = cmds.remove(0);
                     String[] partes = comando.split("=:=", 2);
+                    String[] prts = partes[1].split("=:=");
                     Integer idDoComando = Integer.parseInt(partes[0].trim());
                     //adicionando o item anunciado ao peer correspondente
-                    for (Iterator i = peerList.iterator(); i.hasNext();) {
-                        PeerData element = (PeerData) i.next();
+                    if(prts[0].equals("venda")){
+                        for (Iterator i = peerList.iterator(); i.hasNext();) {
+                            PeerData element = (PeerData) i.next();
 
-                        if ((element).port == idDoComando) {
-                            element.addCmd(comando);
-                            System.out.println("Produto do peer " + element.port + " > " + element.produtos);
+                            if ((element).port == idDoComando) {
+                                element.addCmd(comando);
+                                System.out.println("Produto(s) do peer " + element.port + " > " + element.produtos);
+                            }
                         }
                     }
-                    
                     //lista de vendedores
                     List<String> vendedores = new ArrayList<>();
-                    String[] prts = partes[1].split("=:=");
+                    
                     
                     if(prts[0].equals("compra")) {
                         //para cada peer, verifica se ele possui o item a venda, 
@@ -225,8 +227,7 @@ class Peer extends Thread {
                     if(prts[0].equals("sendkey")) {
                         //prts[1] - id escolhido
                         //prts[2] - nome do item
-                        System.out.println("Eu, id "+ idDoComando +" comprarei "+prts[2]+" do "+prts[1]);
-                        
+                                                
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
 
@@ -243,7 +244,7 @@ class Peer extends Thread {
                         //[1] - id escolhido, [2] - nome item, [3] - chave pub
                         byte[] decodedKey = Base64.getDecoder().decode(prts[3].trim());
                         // rebuild key using SecretKeySpec
-                        System.out.println(prts[3]);
+                        //System.out.println(prts[3]);
                         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
                         PublicKey originalKey = keyFactory.generatePublic(keySpec); 
@@ -259,8 +260,31 @@ class Peer extends Thread {
                         byte[] plainText = c.doFinal(Base64.getDecoder().decode(prts[1]));
                         String originalMsg = new String (plainText);
                         //splt[0]-idDoComando, splt[1]-buystuff, splt[2]-nome item
-                        System.out.println(originalMsg);
+                        //System.out.println(originalMsg);
                         String[] splt = originalMsg.split("=:=", 0);
+                        if(splt[1].equals("buystuff")) {
+                            enviarMsgUnicast("end=:=Você comprou "+splt[2]+" de "+id,Integer.parseInt(splt[0].trim()));
+                            enviarMsgUnicast(id+"=:=remove=:="+splt[2],indexPort);
+                            System.out.println("Eu vendi o item "+splt[2]+ " para o "+splt[0]);
+                            rq.removeSold(splt[2].trim());
+                            
+                        }
+                    }
+                    
+                    if(prts[0].equals("remove")) {
+                        for (Iterator i = peerList.iterator(); i.hasNext();) {
+                            PeerData element = (PeerData) i.next();
+
+                            for(int loop=0;loop<element.produtos.size(); loop++) {
+                                if ((element).produtos.contains(prts[1]+element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
+                                    if(element.port == idDoComando){
+                                    element.produtos.remove((prts[1]+element.produtos.get(loop).substring(prts[1].length())));
+                                    System.out.println("Produto(s) do peer " + element.port + " > " + element.produtos);
+                                    rq.removeSold(prts[1].trim());
+                                    }
+                                }
+                            }
+                        }   
                     }
                     
                     Thread.sleep(100);

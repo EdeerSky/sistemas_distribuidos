@@ -87,7 +87,7 @@ class Connection extends Thread {
         try {			                 // an echo server
 
             String data = in.readUTF();	                  // read a line of data from the stream
-            System.out.println("\nrecebi por unicast:" + data);
+            //System.out.println("\nrecebi por unicast:" + data);
             //TODO cod pra criptografar aqui
             //comando de venda-> venda=:=produto=:=preco
             //comando de compra-> compra=:=produto
@@ -95,24 +95,31 @@ class Connection extends Thread {
             if(splitado[0].equals("encrypted")) {
                 comandos.add(clientSocket.getLocalPort()+"=:=decrypt=:="+splitado[1]);
             }
+            else if (splitado[0].equals("end")) {
+                System.out.println(splitado[1]);
+            }
             //se recebeu um comando do requisitions (começando com venda ou compra)
             //->adiciona a lista de comandos
             //o index recebe esses
-            else if (splitado[1].equals("venda") || splitado[1].equals("compra")) {
-                System.out.println("unicast listener receebeu> " + data);
+            else if (splitado[1].equals("venda") || splitado[1].equals("compra") || splitado[1].equals("remove")) {
+                //System.out.println("unicast listener receebeu> " + data);
                 comandos.add(data);
             }
             //o peer recebe do index e avalia de qual vendedor quer comprar
             else if (splitado[1].equals("vendedores")) { 
                 vend = Integer.parseInt(splitado[0].trim());
-                List<Integer> prices = new ArrayList<>();
-                for(int i=3; i<=(2*vend+1);i+=2) {
-                    prices.add(Integer.parseInt(splitado[i].trim()));
+                if (vend>0){
+                    List<Integer> prices = new ArrayList<>();
+                    for(int i=3; i<=(2*vend+1);i+=2) {
+                        prices.add(Integer.parseInt(splitado[i].trim()));
+                    }
+                    //prices.add(Integer.parseInt(splitado[splitado.length-1]));
+                    String theChosen = splitado[(prices.indexOf(Collections.min(prices))*2)+2];
+                    System.out.println(clientSocket.getLocalPort());
+                    comandos.add(clientSocket.getLocalPort()+"=:=escolhido=:="+theChosen+"=:="+splitado[splitado.length-1]);
+                }else{
+                    System.out.println("Não existem vendedores para esse item!");
                 }
-                //prices.add(Integer.parseInt(splitado[splitado.length-1]));
-                String theChosen = splitado[(prices.indexOf(Collections.min(prices))*2)+2];
-                System.out.println(clientSocket.getLocalPort());
-                comandos.add(clientSocket.getLocalPort()+"=:=escolhido=:="+theChosen+"=:="+splitado[splitado.length-1]);
                 //enviarMsgUnicast(clientSocket.getLocalPort()+"=:=escolhido=:="+theChosen, prices.get(prices.size()-1));
             }
             //o index recebe a resposta do peer sobre qual vendedor escolheu
@@ -123,25 +130,7 @@ class Connection extends Thread {
                 //[0] - id index, [2] - id escolhido, [3] - nome item, [4] - chave pub
                 comandos.add(clientSocket.getLocalPort()+"=:=startp2p=:="+splitado[2]+"=:="+splitado[3]+"=:="+splitado[4]);
             }
-            //recebe x msgs do tipo id=:=preco=:=possui o item,dependendo quantos
-            //desse item existe a venda
-            else if (splitado[2].equals("possui o item")) { //contar os peers, nao funciona
-                vend--; System.out.println("Num de vend: "+String.valueOf(vend));
-                //consegue chegar aqui, recebendo algo do tipo
-                //7180=:=2=:=possui o item, id, preço..
-                //porem não sei como guardar que recebeu 2x (o vend nao funciona)
-                // se conseguir isso, da pra comparar e ver qual tem menor preço
-                //mandando msgUnicast pra o index "meuid=:=id=:=item=:=comprarei"
-                //entao o index retorna a chave publica do vendedor
-                //comprador manda msg cripto pro vendedor falando da compra
-                //vendedor responde confirmando e avisa o index para retirar da lista
-                //comprador anuncia compra
-                // precisa comparar esses preços, mas como?
-            }
-            //else {
-                //decrypt
-            //    comandos.add(clientSocket.getLocalPort()+"=:=decrypt=:="+data);
-            //}
+            //
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {

@@ -67,6 +67,19 @@ public class Requisitions implements Runnable {
             }
         }
     }
+    
+    public void removeSold(String prd) {
+        
+        for(Iterator i = aVenda.iterator(); i.hasNext();) {
+            String element = (String) i.next();
+            String[] partes = element.split("=:=");
+            if(partes[2].trim().equals(prd)){
+                //aVenda.remove(element);
+                i.remove();
+            }
+        }
+        //System.out.println(aVenda);
+    }
 
     public void turnOff() {
         on = false;
