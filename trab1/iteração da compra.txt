@@ -1,0 +1,34 @@
+Para anuncio de venda:
+A thread requisitions captura o comando do console do tipo
+venda=:=produto=:=preço
+e envia por unicast para o indexador
+A thread unicastListener do indexador recebe e adiciona o comando
+em uma lista de comando que é linkada com a thread Peer principal
+No loop da thread Peer o indexador analisa essa lista de comandos,
+pegando o produto e colocando como um dos campos do PeerData, a classe
+que guarda as informações dos Peers.
+
+Para compra:
+->A thread requisitions captura o comando do console do tipo
+  compra=:=produto
+  e envia por unicast para o indexador
+->A thread unicastListener do indexador recebe e adiciona o comando
+  em uma lista de comando que é linkada com a thread Peer principal
+->No loop da thread Peer o indexador analisa essa lista de comandos,
+  percebendo se tratar de compra, percorre a lista de Peers e retorna
+  uma mensagem unicast para o Peer comprador contendo os vendedores do 
+item desejado
+->O unicastListener do Peer comprador recebe essa mensagem e avalia qual
+  irá escolher pelo menor preço. Caso 2 tenham o mesmo preço ele pega o de
+  id de maior valor. Entao adiciona o comando "escolhido" em seu loop na thread peer.
+->De la pede a confirmação da compra, e caso tenha, envia para o indexador sua
+escolha.
+->Recebendo a escolha o index adiciona o comando "sendkey" para enviar a chave
+  pública do Peer vendedor ao comprador. Então envia por a chave, id e nome do item 
+ao comprador.
+->Com a resposta o Peer comprador adiciona o comando "startp2p" em que confirma o
+  item que deseja comprar e utiliza a chave pública para criptografar. Então
+envia para o comprador a mensagem criptografada.
+->Por fim o vendedor recebe a mensagem, retorna a mensagem original com sua chave
+  privada, confirma a venda, enviando mensagens ao comprador e ao indexador.
+

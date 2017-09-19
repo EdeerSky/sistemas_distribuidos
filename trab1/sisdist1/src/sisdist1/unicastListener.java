@@ -34,7 +34,7 @@ public class unicastListener implements Runnable {
     
     int myPort;
     ArrayList<String> cmds;
-    int vendedores=0;
+    
     
     public unicastListener(ArrayList<String> commands, int port) {
         cmds = commands;
@@ -48,8 +48,7 @@ public class unicastListener implements Runnable {
                 ServerSocket listenSocket = new ServerSocket(myPort);
                 while (true) {
                     Socket clientSocket = listenSocket.accept();
-                    Connection c = new Connection(clientSocket, cmds, vendedores);
-                    if(c.getVendors()!=0) vendedores = c.getVendors();
+                    Connection c = new Connection(clientSocket, cmds);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(unicastListener.class.getName()).log(Level.SEVERE, null, ex);
@@ -70,11 +69,10 @@ class Connection extends Thread {
     Socket clientSocket;
     ArrayList<String> comandos;
     int vend;
-    public Connection(Socket aClientSocket, ArrayList<String> c, int vendedores) {
+    public Connection(Socket aClientSocket, ArrayList<String> c) {
         try {
             clientSocket = aClientSocket;
             comandos = c;
-            vend = vendedores;
             //porta = prt;
             in = new DataInputStream(clientSocket.getInputStream());
             this.start();
@@ -91,44 +89,49 @@ class Connection extends Thread {
             //TODO cod pra criptografar aqui
             //comando de venda-> venda=:=produto=:=preco
             //comando de compra-> compra=:=produto
-            String[] splitado = data.split("=:=", 0);
-            if(splitado[0].equals("encrypted")) {
-                comandos.add(clientSocket.getLocalPort()+"=:=decrypt=:="+splitado[1]);
-            }
-            else if (splitado[0].equals("end")) {
-                System.out.println(splitado[1]);
-            }
-            //se recebeu um comando do requisitions (começando com venda ou compra)
-            //->adiciona a lista de comandos
-            //o index recebe esses
-            else if (splitado[1].equals("venda") || splitado[1].equals("compra") || splitado[1].equals("remove")) {
-                //System.out.println("unicast listener receebeu> " + data);
-                comandos.add(data);
-            }
-            //o peer recebe do index e avalia de qual vendedor quer comprar
-            else if (splitado[1].equals("vendedores")) { 
-                vend = Integer.parseInt(splitado[0].trim());
-                if (vend>0){
-                    List<Integer> prices = new ArrayList<>();
-                    for(int i=3; i<=(2*vend+1);i+=2) {
-                        prices.add(Integer.parseInt(splitado[i].trim()));
-                    }
-                    //prices.add(Integer.parseInt(splitado[splitado.length-1]));
-                    String theChosen = splitado[(prices.indexOf(Collections.min(prices))*2)+2];
-                    System.out.println(clientSocket.getLocalPort());
-                    comandos.add(clientSocket.getLocalPort()+"=:=escolhido=:="+theChosen+"=:="+splitado[splitado.length-1]);
-                }else{
-                    System.out.println("Não existem vendedores para esse item!");
+            if(!data.isEmpty()){
+                String[] splitado = data.split("=:=", 0);
+                //envia pro vendedor os dados criptografados pra confirmar a compra
+                //o peer que quer comprar que recebe esse comando
+                if(splitado[0].equals("encrypted")) {
+                    comandos.add(clientSocket.getLocalPort()+"=:=decrypt=:="+splitado[1]);
                 }
-                //enviarMsgUnicast(clientSocket.getLocalPort()+"=:=escolhido=:="+theChosen, prices.get(prices.size()-1));
-            }
-            //o index recebe a resposta do peer sobre qual vendedor escolheu
-            else if (splitado[1].equals("escolhido")) {
-                comandos.add(splitado[0]+"=:=sendkey=:="+splitado[2]+"=:="+splitado[3]);
-            }
-            else if (splitado[1].equals("startp2p")) {
-                //[0] - id index, [2] - id escolhido, [3] - nome item, [4] - chave pub
-                comandos.add(clientSocket.getLocalPort()+"=:=startp2p=:="+splitado[2]+"=:="+splitado[3]+"=:="+splitado[4]);
+                //imprime o item que comprou, e de quem comprou
+                //o peer que comprou recebe esse comando
+                else if (splitado[0].equals("end")) {
+                    System.out.println(splitado[1]);
+                }
+                //se recebeu um comando do requisitions (começando com venda, compra ou remove)
+                //->adiciona a lista de comandos
+                //o index recebe esses comandos                
+                else if (splitado[1].equals("venda") || splitado[1].equals("compra") || splitado[1].equals("remove")) {
+                    //System.out.println("unicast listener receebeu> " + data);
+                    comandos.add(data);
+                }
+                //o peer recebe do index e avalia de qual vendedor quer comprar
+                else if (splitado[1].equals("vendedores")) { 
+                    vend = Integer.parseInt(splitado[0].trim());
+                    if (vend>0){
+                        List<Integer> prices = new ArrayList<>();
+                        for(int i=3; i<=(2*vend+1);i+=2) {
+                            prices.add(Integer.parseInt(splitado[i].trim()));
+                        }
+                        //prices.add(Integer.parseInt(splitado[splitado.length-1]));
+                        String theChosen = splitado[(prices.indexOf(Collections.min(prices))*2)+2];
+                        //System.out.println(clientSocket.getLocalPort());
+                        comandos.add(clientSocket.getLocalPort()+"=:=escolhido=:="+theChosen+"=:="+splitado[splitado.length-1]);
+                    }else{
+                        System.out.println("Não existem vendedores para esse item!");
+                    }
+                }
+                //o index recebe a resposta do peer sobre qual vendedor escolheu
+                else if (splitado[1].equals("escolhido")) {
+                    comandos.add(splitado[0]+"=:=sendkey=:="+splitado[2]+"=:="+splitado[3]);
+                }
+                else if (splitado[1].equals("startp2p")) {
+                    //[0] - id index, [2] - id escolhido, [3] - nome item, [4] - chave pub
+                    comandos.add(clientSocket.getLocalPort()+"=:=startp2p=:="+splitado[2]+"=:="+splitado[3]+"=:="+splitado[4]);
+                }
             }
             //
         } catch (EOFException e) {
@@ -144,29 +147,4 @@ class Connection extends Thread {
         
     }
     
-    public int getVendors() {
-        return vend;
-    }
-    public void enviarMsgUnicast(String msg, int port) {
-        Socket su = null;
-        try {
-            su = new Socket("localhost", port);
-            DataOutputStream outuni = new DataOutputStream(su.getOutputStream());
-            outuni.writeUTF(msg);
-        } catch (UnknownHostException e) {
-            System.out.println("Socket:" + e.getMessage());
-        } catch (EOFException e) {
-            System.out.println("EOF:" + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("readline:" + e.getMessage());
-        } finally {
-            if (su != null) {
-                try {
-                    su.close();
-                } catch (IOException e) {
-                    System.out.println("close:" + e.getMessage());
-                }
-            }
-        }
-    }
 }

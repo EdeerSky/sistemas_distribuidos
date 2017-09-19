@@ -31,6 +31,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
@@ -111,6 +112,7 @@ class Peer extends Thread {
         try {
             // id é um numero aleatorio no range das portas unicast
             id = (int) (Math.random() * 7000 + 1025);
+            System.out.println("Meu id é "+id);
             myIp = "localhost";
             // gera as chaves para criptografia
             keyGenerator();
@@ -142,7 +144,7 @@ class Peer extends Thread {
                 */
                 long now = System.currentTimeMillis();
                 if (now - timeOfLastIndexPing > 6000 && indexIp != "0") {
-                    System.out.println("indexador morreu !!!!!!!!!! e agora? eleição");
+                    System.out.println("Falha no indexador -> eleição");
                     //retirando da lista
                     for (Iterator i = peerList.iterator(); i.hasNext();) {
                         Object element = i.next();
@@ -214,11 +216,15 @@ class Peer extends Thread {
                         enviarMsgUnicast(multiVenda, idDoComando);
                         
                     }
-                    //comando recebido do peer
+                    //comando recebido do peer comprador,
                     if(prts[0].equals("escolhido")) {
                         //prts[1] - id escolhido
                         //prts[2] - nome do item
                         System.out.println("Eu, id "+ idDoComando +" comprarei "+prts[2]+" do "+prts[1]);
+                        System.out.println("Confirmar? Enter até confirmar");
+                        
+                        String ans = new Scanner(System.in).nextLine();
+                        if(ans.isEmpty())
                         enviarMsgUnicast(idDoComando+"=:=escolhido=:="+prts[1]+"=:="+prts[2],indexPort);
                     }
                     
@@ -243,7 +249,6 @@ class Peer extends Thread {
                     if(prts[0].equals("startp2p")) {
                         //[1] - id escolhido, [2] - nome item, [3] - chave pub
                         byte[] decodedKey = Base64.getDecoder().decode(prts[3].trim());
-                        // rebuild key using SecretKeySpec
                         //System.out.println(prts[3]);
                         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -254,6 +259,8 @@ class Peer extends Thread {
                         enviarMsgUnicast("encrypted=:="+Base64.getEncoder().encodeToString(cipherTextArray),Integer.parseInt(prts[1].trim()));
                     }
                     
+                    //ultimo passo para vender, o vendedor recepe a msg criptografada com o pedido de compra
+                    //decrypt, retorna a confirmação e retira o item
                     if(prts[0].equals("decrypt")) {
                         Cipher c = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
                         c.init(Cipher.DECRYPT_MODE, privateKey);
@@ -271,6 +278,7 @@ class Peer extends Thread {
                         }
                     }
                     
+                    //o index processa esse comando para retirar o item que foi vendido da lista
                     if(prts[0].equals("remove")) {
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
@@ -311,7 +319,7 @@ class Peer extends Thread {
 
     public void eleicao() {   
         //retirando da lista os peers que sairam
-        System.out.println(peerList);
+        //System.out.println(peerList);
         for (Iterator i = peerList.iterator(); i.hasNext();) {
             PeerData element = (PeerData) i.next();
             if (!element.isAlive()) {
@@ -340,7 +348,7 @@ class Peer extends Thread {
     @Override
     public void run() {
         try {			               
-            System.out.println("comecando a escutar...");
+            //System.out.println("comecando a escutar...");
             while (true) {
                 byte[] buffer = new byte[1000];
                 DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
@@ -397,7 +405,7 @@ class Peer extends Thread {
                         }
                     }
                     if (indexPort != indexPortRecebido) {
-                        System.out.println("Indexador Mudou!!-----");
+                        //System.out.println("Indexador Mudou!!-----");
                     }
                     indexIp = "localhost";
                     indexPort = indexPortRecebido;
@@ -472,22 +480,14 @@ class Peer extends Thread {
     public void keyGenerator() {
         int RSA_KEY_LENGTH = 2048;
         String ALGORITHM_NAME = "RSA";
-        //String PADDING_SCHEME = "OAEPWITHSHA-512ANDMGF1PADDING";
-        // String MODE_OF_OPERATION = "ECB"; // This essentially means none behind the scene
         KeyPair rsaKeyPair;
         try {
-
             // Generate Key Pairs
             KeyPairGenerator rsaKeyGen = KeyPairGenerator.getInstance(ALGORITHM_NAME);
             rsaKeyGen.initialize(RSA_KEY_LENGTH);
             rsaKeyPair = rsaKeyGen.generateKeyPair();
             publicKey = rsaKeyPair.getPublic();
             privateKey = rsaKeyPair.getPrivate();
-
-            //String encryptedText = rsaEncrypt(shortMessage, publicKey);
-            //String decryptedText = rsaDecrypt(Base64.getDecoder().decode(encryptedText), privateKey) ;
-            //System.out.println("Encrypted text = " + encryptedText) ;
-            //System.out.println("Decrypted text = " + decryptedText) ;
         } catch (Exception e) {
             System.out.println("Exception while encryption/decryption");
             e.printStackTrace();

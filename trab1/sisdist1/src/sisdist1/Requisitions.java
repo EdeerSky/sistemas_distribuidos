@@ -38,17 +38,20 @@ public class Requisitions implements Runnable {
             // receber comandos de compra e venda
             String cmd = "";
             System.out.println("\n digite o comando: ");
+            while(cmd.isEmpty()){
             Scanner scan = new Scanner(System.in);
             cmd = scan.nextLine();
-
+            }
             if (indexPort > 1) {
                 //envia o comando junto com o id automaticamente
-                String aenviar = id + "=:=" + cmd;
-                String[] splitter = cmd.split("=:=",0);
-                //guarda os itens anunciados caso o index caia
-                if(splitter[0].equals("venda"))
-                aVenda.add(aenviar);
-                enviarMsg(aenviar);
+                if(cmd.contains("=:=")){
+                    String aenviar = id + "=:=" + cmd;
+                    String[] splitter = cmd.split("=:=",0);
+                    //guarda os itens anunciados caso o index caia
+                    if(splitter[0].equals("venda"))
+                    aVenda.add(aenviar);
+                    enviarMsg(aenviar);
+                }
             } else {
                 System.out.println("Index not set");
             }
