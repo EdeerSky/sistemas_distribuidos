@@ -14,18 +14,23 @@ public class PeerData implements Comparable<PeerData> {
     public long timeOfLastPing;
     public PublicKey publicKey;
     public ArrayList<String> produtos;
+    public int reputacao;
+
     //construtor apenas com porta
     public PeerData(int porta) {
         port = porta;
         timeOfLastPing = System.currentTimeMillis();
     }
+
     //construtor com porta e publickey
     public PeerData(int porta, PublicKey pk) {
+        reputacao = 0;
         publicKey = pk;
         port = porta;
         produtos = new ArrayList<>();
         timeOfLastPing = System.currentTimeMillis();
     }
+
     //checar se o peer esta funcional
     public boolean isAlive() {
         long now = System.currentTimeMillis();
@@ -37,13 +42,15 @@ public class PeerData implements Comparable<PeerData> {
 //        System.out.println("not dead yet");
         return true;
     }
+
     //adiciona os produtos a serem vendidos na lista de produtos
     public void addCmd(String p) {
         String[] partes = p.split("=:=", 0);
         if (partes[1].trim().equals("venda")) {
-            produtos.add(partes[2].trim()+":"+partes[3].trim());
+            produtos.add(partes[2].trim() + ":" + partes[3].trim());
         }
     }
+
     //faz o update do tempo para o keep alive
     public void updateTime() {
         timeOfLastPing = System.currentTimeMillis();

@@ -16,8 +16,7 @@ import java.util.Scanner;
 
 /*
 TO-DO: retirar itens vendidos do aVenda
-*/
-
+ */
 public class Requisitions implements Runnable {
 
     int indexPort;
@@ -37,19 +36,22 @@ public class Requisitions implements Runnable {
         while (on) {
             // receber comandos de compra e venda
             String cmd = "";
-            System.out.println("\n digite o comando: ");
-            while(cmd.isEmpty()){
-            Scanner scan = new Scanner(System.in);
-            cmd = scan.nextLine();
+            System.out.println("\n Comandos possiveis:\n  venda=:=produto=:=preco\n  compra=:=produto");
+            System.out.println(" digite o comando: ");
+
+            while (cmd.isEmpty()) {
+                Scanner scan = new Scanner(System.in);
+                cmd = scan.nextLine();
             }
             if (indexPort > 1) {
                 //envia o comando junto com o id automaticamente
-                if(cmd.contains("=:=")){
+                if (cmd.contains("=:=")) {
                     String aenviar = id + "=:=" + cmd;
-                    String[] splitter = cmd.split("=:=",0);
+                    String[] splitter = cmd.split("=:=", 0);
                     //guarda os itens anunciados caso o index caia
-                    if(splitter[0].equals("venda"))
-                    aVenda.add(aenviar);
+                    if (splitter[0].equals("venda")) {
+                        aVenda.add(aenviar);
+                    }
                     enviarMsg(aenviar);
                 }
             } else {
@@ -61,22 +63,22 @@ public class Requisitions implements Runnable {
 
     public void updateIndex(int port) {
         //se o index mudou, manda novamente os itens anunciados para o novo index
-        if(indexPort!=port){
+        if (indexPort != port) {
             indexPort = port;
             on = true;
-            for(Iterator i = aVenda.iterator(); i.hasNext();) {
+            for (Iterator i = aVenda.iterator(); i.hasNext();) {
                 String element = (String) i.next();
                 enviarMsg(element);
             }
         }
     }
-    
+
     public void removeSold(String prd) {
-        
-        for(Iterator i = aVenda.iterator(); i.hasNext();) {
+
+        for (Iterator i = aVenda.iterator(); i.hasNext();) {
             String element = (String) i.next();
             String[] partes = element.split("=:=");
-            if(partes[2].trim().equals(prd)){
+            if (partes[2].trim().equals(prd)) {
                 //aVenda.remove(element);
                 i.remove();
             }
@@ -87,7 +89,7 @@ public class Requisitions implements Runnable {
     public void turnOff() {
         on = false;
     }
-    
+
     public ArrayList<String> getVendas() {
         return aVenda;
     }

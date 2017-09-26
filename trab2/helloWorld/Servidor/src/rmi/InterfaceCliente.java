@@ -5,17 +5,14 @@
  */
 package rmi;
 
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  *
  * @author a1013343
  */
-public class Servidor {
+public interface InterfaceCliente extends Remote {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-    }
-    
+    String echo(String texto) throws RemoteException;
 }

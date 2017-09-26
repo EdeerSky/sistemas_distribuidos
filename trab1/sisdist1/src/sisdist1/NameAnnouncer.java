@@ -17,7 +17,6 @@ import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 public class NameAnnouncer {
 
     int intervalo = 5000;
@@ -29,6 +28,7 @@ public class NameAnnouncer {
     MulticastSocket s = null;
     InetAddress group;
     DatagramPacket messageOut;
+
     // mensagem é o id
     public NameAnnouncer(int mensagem, String ip, int porta, PublicKey pk) {
         String encodedKey = null;

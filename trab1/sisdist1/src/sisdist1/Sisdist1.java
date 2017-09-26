@@ -64,7 +64,7 @@ class Peer extends Thread {
     //Socket clientSocket;
     /*
     Definição do ip e porta Multicast, que é o mesmo para todos os peers
-    */
+     */
     String ipMulti = "224.0.0.251";
     int portaMulti = 6789;
     MulticastSocket s = null;
@@ -75,7 +75,7 @@ class Peer extends Thread {
     indexIp/Port - guardar as informações do indexador
     timeOfLastIndexPing - para fazer o dT e saber se existe falha no index
     souIndexador - saber se o proprio peer é o index
-    */
+     */
     private String myIp;
     private int id;
     private String indexIp = "0";
@@ -84,7 +84,7 @@ class Peer extends Thread {
     private boolean souIndexador;
     /*
     chaves para a criptografia da venda/compra
-    */
+     */
     PrivateKey privateKey;
     PublicKey publicKey;
     String ALGORITHM_NAME = "RSA";
@@ -93,18 +93,18 @@ class Peer extends Thread {
     /*
     peerList - Guarda info relevantes dos peers para uso do index
     cmds - lista de comandos recebidos por unicast ao index
-    */
+     */
     private ArrayList<PeerData> peerList;
     public ArrayList<String> cmds;
 
     /*
     rq/reqs - thread para enviar comandos unicast
     ia - anuncio do indexador
-    */
+     */
     Requisitions rq;
     Thread reqs;
     IndexAnnouncer ia;
-    
+
     String multiVenda;
 
     public Peer() throws InterruptedException {
@@ -112,7 +112,7 @@ class Peer extends Thread {
         try {
             // id é um numero aleatorio no range das portas unicast
             id = (int) (Math.random() * 7000 + 1025);
-            System.out.println("Meu id é "+id);
+            System.out.println("Meu id é " + id);
             myIp = "localhost";
             // gera as chaves para criptografia
             keyGenerator();
@@ -128,7 +128,7 @@ class Peer extends Thread {
 
             // ligando recebedor de comandos, mensagens unicast
             cmds = new ArrayList<>();
-            Thread uniListener = new Thread(new unicastListener(cmds, id));
+            Thread uniListener = new Thread(new unicastListener(cmds, id, peerList));
             uniListener.start();
 
             // inicia a thread para enviar comandos unicast
@@ -141,7 +141,7 @@ class Peer extends Thread {
                 pega o tempo atual e compara com a ultima vez que o indexador
                 se anunciou, caso seja longo demais e existir um indexador já eleito,
                 -> remove o indexador e promove eleição
-                */
+                 */
                 long now = System.currentTimeMillis();
                 if (now - timeOfLastIndexPing > 6000 && indexIp != "0") {
                     System.out.println("Falha no indexador -> eleição");
@@ -169,14 +169,13 @@ class Peer extends Thread {
                 // o loop ocorre enquanto houver comandos
                 // os comandos são do formato: id=:=venda=:=item=:=preco
                 //                             id=:=compra=:=item
-                
                 while (!cmds.isEmpty()) {
                     String comando = cmds.remove(0);
                     String[] partes = comando.split("=:=", 2);
                     String[] prts = partes[1].split("=:=");
                     Integer idDoComando = Integer.parseInt(partes[0].trim());
                     //adicionando o item anunciado ao peer correspondente
-                    if(prts[0].equals("venda")){
+                    if (prts[0].equals("venda")) {
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
 
@@ -188,116 +187,123 @@ class Peer extends Thread {
                     }
                     //lista de vendedores
                     List<String> vendedores = new ArrayList<>();
-                    
-                    
-                    if(prts[0].equals("compra")) {
+
+                    if (prts[0].equals("compra")) {
                         //para cada peer, verifica se ele possui o item a venda, 
                         //adicionando na lista de vendedores caso tenha com o preço do item
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
-                            
-                            for(int loop=0;loop<element.produtos.size(); loop++) {
-                                if ((element).produtos.contains(prts[1]+element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
-                                    vendedores.add(element.port+"=:="+element.produtos.get(loop).substring(prts[1].length()+1));
+
+                            for (int loop = 0; loop < element.produtos.size(); loop++) {
+                                if ((element).produtos.contains(prts[1] + element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
+                                    vendedores.add(element.port + "=:=" + element.produtos.get(loop).substring(prts[1].length() + 1));
                                 }
                             }
                         }
                         //envia msg unicast para o peer interesado com o numero de vendedores do item
                         //enviarMsgUnicast(vendedores.size()+"=:=vendedores",idDoComando); //envia o numero de vendedores do mesmo produto
-                        
-                        multiVenda = (vendedores.size()+"=:=vendedores");
+
+                        multiVenda = (vendedores.size() + "=:=vendedores");
                         //envia msg unicast para o peer interesado no formato idvendedor=:=preco=:=possui o item
                         vendedores.forEach((element) -> {
                             //final String aux = multiVenda;
-                            multiVenda = multiVenda.concat("=:="+element);
+                            multiVenda = multiVenda.concat("=:=" + element);
                             //enviarMsgUnicast(element+"=:=possui o item",idDoComando); //envia os vendedores do produto + preco
                         });
-                        multiVenda = multiVenda.concat("=:="+prts[1]);
+                        multiVenda = multiVenda.concat("=:=" + prts[1]);
                         enviarMsgUnicast(multiVenda, idDoComando);
-                        
+
                     }
                     //comando recebido do peer comprador,
-                    if(prts[0].equals("escolhido")) {
+                    if (prts[0].equals("escolhido")) {
                         //prts[1] - id escolhido
                         //prts[2] - nome do item
-                        System.out.println("Eu, id "+ idDoComando +" comprarei "+prts[2]+" do "+prts[1]);
+                        System.out.println("Eu, id " + idDoComando + " comprarei " + prts[2] + " do " + prts[1]);
                         System.out.println("Confirmar? Enter até confirmar");
-                        
+
                         String ans = new Scanner(System.in).nextLine();
-                        if(ans.isEmpty())
-                        enviarMsgUnicast(idDoComando+"=:=escolhido=:="+prts[1]+"=:="+prts[2],indexPort);
+                        if (ans.isEmpty()) {
+                            enviarMsgUnicast(idDoComando + "=:=escolhido=:=" + prts[1] + "=:=" + prts[2], indexPort);
+                        }
                     }
-                    
+
                     //comando recebido pelo index para mandar a chave pública do vendedor para o peer
                     String chv = new String();
-                    if(prts[0].equals("sendkey")) {
+                    if (prts[0].equals("sendkey")) {
                         //prts[1] - id escolhido
                         //prts[2] - nome do item
-                                                
+
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
 
                             if ((element).port == Integer.parseInt(prts[1].trim())) {
                                 PublicKey chave = element.publicKey;
                                 chv = Base64.getEncoder().encodeToString(chave.getEncoded());
-                            }                            
+                            }
                         }
-                        
-                        enviarMsgUnicast(indexPort+"=:=startp2p=:="+prts[1]+"=:="+prts[2]+"=:="+chv,idDoComando);
+
+                        enviarMsgUnicast(indexPort + "=:=startp2p=:=" + prts[1] + "=:=" + prts[2] + "=:=" + chv, idDoComando);
                     }
                     //comando recebido pelo peer para começar o p2p para compra
-                    if(prts[0].equals("startp2p")) {
+                    if (prts[0].equals("startp2p")) {
                         //[1] - id escolhido, [2] - nome item, [3] - chave pub
                         byte[] decodedKey = Base64.getDecoder().decode(prts[3].trim());
                         //System.out.println(prts[3]);
                         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
                         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                        PublicKey originalKey = keyFactory.generatePublic(keySpec); 
+                        PublicKey originalKey = keyFactory.generatePublic(keySpec);
                         Cipher c = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
                         c.init(Cipher.ENCRYPT_MODE, originalKey);
-                        byte[] cipherTextArray = c.doFinal((idDoComando+"=:=buystuff=:="+prts[2]).getBytes());
-                        enviarMsgUnicast("encrypted=:="+Base64.getEncoder().encodeToString(cipherTextArray),Integer.parseInt(prts[1].trim()));
-                    }
-                    
-                    //ultimo passo para vender, o vendedor recepe a msg criptografada com o pedido de compra
-                    //decrypt, retorna a confirmação e retira o item
-                    if(prts[0].equals("decrypt")) {
-                        Cipher c = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
-                        c.init(Cipher.DECRYPT_MODE, privateKey);
-                        byte[] plainText = c.doFinal(Base64.getDecoder().decode(prts[1]));
-                        String originalMsg = new String (plainText);
-                        //splt[0]-idDoComando, splt[1]-buystuff, splt[2]-nome item
-                        //System.out.println(originalMsg);
-                        String[] splt = originalMsg.split("=:=", 0);
-                        if(splt[1].equals("buystuff")) {
-                            enviarMsgUnicast("end=:=Você comprou "+splt[2]+" de "+id,Integer.parseInt(splt[0].trim()));
-                            enviarMsgUnicast(id+"=:=remove=:="+splt[2],indexPort);
-                            System.out.println("Eu vendi o item "+splt[2]+ " para o "+splt[0]);
-                            rq.removeSold(splt[2].trim());
-                            
-                        }
-                    }
-                    
-                    //o index processa esse comando para retirar o item que foi vendido da lista
-                    if(prts[0].equals("remove")) {
+                        byte[] cipherTextArray = c.doFinal((idDoComando + "=:=buystuff=:=" + prts[2]).getBytes());
+                        enviarMsgUnicast("encrypted=:=" + Base64.getEncoder().encodeToString(cipherTextArray), Integer.parseInt(prts[1].trim()));
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
 
-                            for(int loop=0;loop<element.produtos.size(); loop++) {
-                                if ((element).produtos.contains(prts[1]+element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
-                                    if(element.port == idDoComando){
-                                    element.produtos.remove((prts[1]+element.produtos.get(loop).substring(prts[1].length())));
-                                    System.out.println("Produto(s) do peer " + element.port + " > " + element.produtos);
-                                    rq.removeSold(prts[1].trim());
+                            if ((element).port == Integer.parseInt(prts[1].trim())) {
+                                element.reputacao++;
+                            }
+                        }
+                    }
+
+                    //ultimo passo para vender, o vendedor recepe a msg criptografada com o pedido de compra
+                    //decrypt, retorna a confirmação e retira o item
+                    if (prts[0].equals("decrypt")) {
+                        Cipher c = Cipher.getInstance(ALGORITHM_NAME + "/" + MODE_OF_OPERATION + "/" + PADDING_SCHEME);
+                        c.init(Cipher.DECRYPT_MODE, privateKey);
+                        byte[] plainText = c.doFinal(Base64.getDecoder().decode(prts[1]));
+                        String originalMsg = new String(plainText);
+                        //splt[0]-idDoComando, splt[1]-buystuff, splt[2]-nome item
+                        //System.out.println(originalMsg);
+                        String[] splt = originalMsg.split("=:=", 0);
+                        if (splt[1].equals("buystuff")) {
+                            enviarMsgUnicast("end=:=Você comprou " + splt[2] + " de " + id, Integer.parseInt(splt[0].trim()));
+                            enviarMsgUnicast(id + "=:=remove=:=" + splt[2], indexPort);
+                            System.out.println("Eu vendi o item " + splt[2] + " para o " + splt[0]);
+                            rq.removeSold(splt[2].trim());
+
+                        }
+                    }
+
+                    //o index processa esse comando para retirar o item que foi vendido da lista
+                    if (prts[0].equals("remove")) {
+                        for (Iterator i = peerList.iterator(); i.hasNext();) {
+                            PeerData element = (PeerData) i.next();
+
+                            for (int loop = 0; loop < element.produtos.size(); loop++) {
+                                if ((element).produtos.contains(prts[1] + element.produtos.get(loop).substring(prts[1].length()))) { //se contem o item
+                                    if (element.port == idDoComando) {
+                                        element.produtos.remove((prts[1] + element.produtos.get(loop).substring(prts[1].length())));
+                                        System.out.println("Produto(s) do peer " + element.port + " > " + element.produtos);
+                                        rq.removeSold(prts[1].trim());
                                     }
                                 }
                             }
-                        }   
+                        }
                     }
-                    
+
                     Thread.sleep(100);
                 }
-                
+
             }
 
         } catch (IOException e) {
@@ -317,7 +323,7 @@ class Peer extends Thread {
         }
     }
 
-    public void eleicao() {   
+    public void eleicao() {
         //retirando da lista os peers que sairam
         //System.out.println(peerList);
         for (Iterator i = peerList.iterator(); i.hasNext();) {
@@ -333,7 +339,7 @@ class Peer extends Thread {
         se for o proprio peer, inicia o anuncio de que é o index,
         arruma os parâmetros locais e da um update na Thread rq,
         que envia msgs unicast ao index
-        */
+         */
         if (voto.equals(id)) {
             enviarMsgMulticast("sou indexador id=:=" + id);
             ia = new IndexAnnouncer(id, ipMulti, portaMulti);
@@ -347,7 +353,7 @@ class Peer extends Thread {
     // thread para escutar msgs Multicast
     @Override
     public void run() {
-        try {			               
+        try {
             //System.out.println("comecando a escutar...");
             while (true) {
                 byte[] buffer = new byte[1000];
@@ -375,8 +381,8 @@ class Peer extends Thread {
                         String msg = "oi meu id e=:=" + portRecebido + "=:=" + Base64.getEncoder().encodeToString(originalKey.getEncoded());
                         enviarMsgMulticast(msg);
                     } else {
-                    //caso já tenha o peer adicionado, da um update do tempo de
-                    //vida e checa se esta operante, caso não esteja é removido
+                        //caso já tenha o peer adicionado, da um update do tempo de
+                        //vida e checa se esta operante, caso não esteja é removido
                         for (Iterator i = peerList.iterator(); i.hasNext();) {
                             PeerData element = (PeerData) i.next();
 
@@ -390,7 +396,7 @@ class Peer extends Thread {
                     }
 
                 }
-                
+
                 //escuta o keep alive do indexador
                 //sou indexador id=:=id
                 if (parts[0].equals("sou indexador id")) {

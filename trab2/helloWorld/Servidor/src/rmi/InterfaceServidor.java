@@ -5,10 +5,14 @@
  */
 package rmi;
 
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  *
  * @author a1013343
  */
-public interface InterfaceServidor {
-    
+public interface InterfaceServidor extends Remote {
+
+    String sayHello(String nomeCliente, InterfaceCliente referenciaCliente) throws RemoteException;
 }

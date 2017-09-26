@@ -29,6 +29,7 @@ public class IndexAnnouncer {
     InetAddress group;
     DatagramPacket messageOut;
     public boolean on;
+
     // mensagem é o id
     public IndexAnnouncer(int mensagem, String ip, int porta) {
         msg = "sou indexador id=:=" + Integer.toString(mensagem);
