@@ -18,7 +18,7 @@ public interface InterfaceServidor extends Remote {
 
     float consulta(String nome) throws RemoteException;
 
-    int compra(String nomeAcao, int quantidade, float precoMaximo, InterfaceCliente referenciaCliente) throws RemoteException;
+    void compra(String nomeAcao, int quantidade, float precoMaximo, InterfaceCliente referenciaCliente) throws RemoteException;
 
-    int venda(String nomeAcao, int quantidade, float precoMinimo, InterfaceCliente referenciaCliente) throws RemoteException;
+    void venda(String nomeAcao, int quantidade, float precoMinimo, InterfaceCliente referenciaCliente) throws RemoteException;
 }

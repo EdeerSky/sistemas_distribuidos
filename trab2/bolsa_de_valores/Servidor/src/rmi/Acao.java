@@ -6,6 +6,8 @@
 package rmi;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -15,15 +17,14 @@ import java.util.List;
 public class Acao {
 
     String nome;
-    float preco;
-    int vendedorId;
     List<InterfaceCliente> interessados;
+    HashMap<InterfaceCliente, HashMap> compradores;
+    HashMap<InterfaceCliente, HashMap> vendedores;
 
-    public Acao(String nome, float preco, int vendedorId, List<InterfaceCliente> interessados) {
+    public Acao(String nome) {
         this.nome = nome;
-        this.preco = preco;
-        this.vendedorId = vendedorId;
-        this.interessados = interessados;
+        interessados = new ArrayList<>();
+        compradores = new HashMap<>();
     }
     
     public void addInteressados(InterfaceCliente cliente){
@@ -31,7 +32,7 @@ public class Acao {
     }
     
     public void mudaPreco(float novoPreco) throws RemoteException{
-        this.preco = novoPreco;
+        //this.preco = novoPreco;
         for(InterfaceCliente i: interessados){
             i.notificar(novoPreco);
         }

@@ -21,31 +21,51 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
     @Override
     public void registrarInteresse(String nomeAcao, InterfaceCliente referenciaCliente) throws RemoteException {
         boolean flag = false;
-        for(Acao a : acoes) {
-            if (a.nome.equals(nomeAcao)){
+        for (Acao a : acoes) {
+            if (a.nome.equals(nomeAcao)) {
                 flag = true;
                 a.addInteressados(referenciaCliente);
             }
         }
-        if(!flag){
+        if (!flag) {
             System.out.println("Ação nao existe!");
         }
     }
 
     @Override
     public float consulta(String nome) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//        boolean flag = false;
+//        for (Acao a : acoes) {
+//            if (a.nome.equals(nome)) {
+//                flag = true;
+//                return a.preco;
+//            }
+//        }
+//        if (!flag) {
+//            System.out.println("Ação nao existe!");
+//        }
+        return -1;
     }
 
     @Override
-    public int compra(String nomeAcao, int quantidade, float precoMaximo, InterfaceCliente referenciaCliente) throws RemoteException {
+    public void compra(String nomeAcao, int quantidade, float precoMaximo, InterfaceCliente referenciaCliente) throws RemoteException {
+        boolean flag = false;
+        for (Acao a : acoes) {
+            if (a.nome.equals(nomeAcao)) {
+                flag = true;
+                a.compradores.put(referenciaCliente, );
+                
+        }
+        if (!flag) {
+            System.out.println("Ação nao existe!");
+        }
+    }}
+
+    @Override
+    public void venda(String nomeAcao, int quantidade, float precoMinimo, InterfaceCliente referenciaCliente) throws RemoteException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @Override
-    public int venda(String nomeAcao, int quantidade, float precoMinimo, InterfaceCliente referenciaCliente) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
 
 }
