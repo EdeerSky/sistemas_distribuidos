@@ -8,6 +8,8 @@ package rmi;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class InterfaceServidorImpl extends UnicastRemoteObject implements InterfaceServidor {
@@ -16,6 +18,7 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
 
     InterfaceServidorImpl() throws RemoteException {
         acoes = new ArrayList<>();
+        //TODO: criar uma thread que fica mudando os valores das acoes
     }
 
     @Override
@@ -34,16 +37,17 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
 
     @Override
     public float consulta(String nome) throws RemoteException {
-//        boolean flag = false;
-//        for (Acao a : acoes) {
-//            if (a.nome.equals(nome)) {
-//                flag = true;
-//                return a.preco;
-//            }
-//        }
-//        if (!flag) {
-//            System.out.println("Ação nao existe!");
-//        }
+        boolean flag = false;
+        for (Acao a : acoes) {
+            if (a.nome.equals(nome)) {
+                flag = true;
+                return a.precoDeMercado;
+            }
+            if (!flag) {
+                System.out.println("Ação nao existe!");
+                //TODO:  criar a acao aqui
+            }
+        }
         return -1;
     }
 
@@ -53,19 +57,53 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
         for (Acao a : acoes) {
             if (a.nome.equals(nomeAcao)) {
                 flag = true;
-                a.compradores.put(referenciaCliente, );
-                
+                // colocando na lista de compradores
+                HashMap<Integer, Float> tmp = new HashMap<>();
+                tmp.put(quantidade, precoMaximo);
+                a.compradores.put(referenciaCliente, tmp);
+
+                //tentando fazer par comprador/vendedor
+                if (!a.vendedores.isEmpty()) {
+                    for (HashMap.Entry<InterfaceCliente, HashMap<Integer, Float>> vendedor : a.vendedores.entrySet()) {
+                        //vendedor.getKey();
+                        //vendedor.getValue());
+                        HashMap<Integer, Float> temp = vendedor.getValue();
+                        for (HashMap.Entry<Integer, Float> qtdp : temp.entrySet()) {
+                            float precoVendedor = qtdp.getValue();
+                            if (precoVendedor < precoMaximo) {
+                                //efetuar Venda
+
+                            }
+                        }
+                    }
+                }
+
+                break;
+            }
+            if (!flag) {
+                System.out.println("Ação nao existe!");
+            }
         }
-        if (!flag) {
-            System.out.println("Ação nao existe!");
-        }
-    }}
+    }
 
     @Override
     public void venda(String nomeAcao, int quantidade, float precoMinimo, InterfaceCliente referenciaCliente) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean flag = false;
+        for (Acao a : acoes) {
+            if (a.nome.equals(nomeAcao)) {
+                flag = true;
+                // colocando na lista de compradores
+                HashMap<Integer, Float> tmp = new HashMap<>();
+                tmp.put(quantidade, precoMinimo);
+                a.vendedores.put(referenciaCliente, tmp);
+                //encontrar par comprador/vendedor
+
+                break;
+            }
+            if (!flag) {
+                System.out.println("Ação nao existe!");
+            }
+        }
     }
-
-
 
 }

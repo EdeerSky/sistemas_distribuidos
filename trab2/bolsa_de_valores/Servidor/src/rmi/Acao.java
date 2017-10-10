@@ -16,15 +16,19 @@ import java.util.List;
  */
 public class Acao {
 
-    String nome;
-    List<InterfaceCliente> interessados;
-    HashMap<InterfaceCliente, HashMap> compradores;
-    HashMap<InterfaceCliente, HashMap> vendedores;
+    public String nome;
+    public float precoDeMercado;
+    public List<InterfaceCliente> interessados;
+    //.................................\/dentro desse hashmap tem <quantidade, preco>
+    public HashMap<InterfaceCliente, HashMap<Integer, Float>> compradores;
+    public HashMap<InterfaceCliente, HashMap<Integer, Float>> vendedores;
 
     public Acao(String nome) {
         this.nome = nome;
         interessados = new ArrayList<>();
         compradores = new HashMap<>();
+        vendedores = new HashMap<>();
+        precoDeMercado = (float) (10 + Math.random() * (100 - 10));
     }
     
     public void addInteressados(InterfaceCliente cliente){
@@ -34,7 +38,7 @@ public class Acao {
     public void mudaPreco(float novoPreco) throws RemoteException{
         //this.preco = novoPreco;
         for(InterfaceCliente i: interessados){
-            i.notificar(novoPreco);
+            i.notificar("novopreco:" + String.valueOf(novoPreco));
         }
     }
  
