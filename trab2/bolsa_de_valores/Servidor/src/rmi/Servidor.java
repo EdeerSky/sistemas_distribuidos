@@ -31,9 +31,8 @@ public class Servidor {
             registry.rebind("HelloDime", serventeServidor);
 
             System.out.println("Server ready");
-        } catch (Exception e) {
+        } catch (RemoteException e) {
             System.err.println("Server exception: " + e.toString());
-            e.printStackTrace();
         }
     }
 

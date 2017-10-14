@@ -11,7 +11,12 @@ import java.rmi.server.UnicastRemoteObject;
 public class InterfaceClienteImpl extends UnicastRemoteObject implements InterfaceCliente {
 
     InterfaceClienteImpl(InterfaceServidor referenciaServidor) throws RemoteException {
-        referenciaServidor.sayHello("cliente1", this);
+        //
+        while (true) {
+            //interface com usuario aqui
+
+        }
+
     }
 
     @Override
@@ -20,4 +25,19 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
         return null;
     }
 
+    @Override
+    public void notificar(String mensagem) throws RemoteException {
+        String[] tipo = mensagem.split(":");
+
+        if (tipo[0].trim().equals("novoPreco")) {
+            System.out.println("O preco da ação mudou. Novo preço = " + tipo[1].trim());
+        }
+        if (tipo[0].trim().equals("voceVendeu")) {
+            System.out.println("Venda Efetuada " + mensagem);
+        }
+        if (tipo[0].trim().equals("voceComprou")) {
+            System.out.println("Compra Efetuada " + mensagem);
+        }
+
+    }
 }

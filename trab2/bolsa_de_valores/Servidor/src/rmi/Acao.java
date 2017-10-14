@@ -38,7 +38,7 @@ public class Acao {
     public void mudaPreco(float novoPreco) throws RemoteException{
         //this.preco = novoPreco;
         for(InterfaceCliente i: interessados){
-            i.notificar("novopreco:" + String.valueOf(novoPreco));
+            i.notificar("novoPreco:" + String.valueOf(novoPreco));
         }
     }
  

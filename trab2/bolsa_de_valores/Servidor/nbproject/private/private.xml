@@ -3,11 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/InterfaceServidor.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/InterfaceCliente.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/Servidor.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/Acao.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/InterfaceServidorImpl.java</file>
+            <file>file:/home/samot/git/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/InterfaceCliente.java</file>
+            <file>file:/home/samot/git/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/Acao.java</file>
+            <file>file:/home/samot/git/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/Servidor.java</file>
+            <file>file:/home/samot/git/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/InterfaceServidorImpl.java</file>
+            <file>file:/home/samot/git/sistemas_distribuidos/trab2/bolsa_de_valores/Servidor/src/rmi/InterfaceServidor.java</file>
         </group>
     </open-files>
 </project-private>

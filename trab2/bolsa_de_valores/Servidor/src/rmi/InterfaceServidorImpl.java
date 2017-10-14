@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class InterfaceServidorImpl extends UnicastRemoteObject implements InterfaceServidor {
 
@@ -18,7 +20,38 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
 
     InterfaceServidorImpl() throws RemoteException {
         acoes = new ArrayList<>();
-        //TODO: criar uma thread que fica mudando os valores das acoes
+        //colocando algumas acoes padrão
+        acoes.add(new Acao("macdonalds"));
+        acoes.add(new Acao("waynecorp"));
+        acoes.add(new Acao("exxon"));
+        acoes.add(new Acao("bitcoin"));
+        acoes.add(new Acao("petrobras"));
+
+        
+        //uma thread que fica mudando os valores das acoes
+        Thread t = new Thread() {
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(InterfaceServidorImpl.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    for (Acao a : acoes) {
+                        float novoPreco = a.precoDeMercado * 0.9f;
+                        novoPreco += (float) (Math.random() * (a.precoDeMercado * 0.2f));
+                        if (Math.random() > 0.5d) {
+                            try {
+                                a.mudaPreco(novoPreco);
+                            } catch (RemoteException ex) {
+                                Logger.getLogger(InterfaceServidorImpl.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        t.start();
     }
 
     @Override
@@ -68,11 +101,20 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
                         //vendedor.getKey();
                         //vendedor.getValue());
                         HashMap<Integer, Float> temp = vendedor.getValue();
+                        // é um for mas na verdade só tem um elemento
                         for (HashMap.Entry<Integer, Float> qtdp : temp.entrySet()) {
                             float precoVendedor = qtdp.getValue();
-                            if (precoVendedor < precoMaximo) {
+                            if (precoVendedor <= precoMaximo) {
                                 //efetuar Venda
+                                float precoFinal = (precoMaximo + precoVendedor) / 2;
+                                String mensagem = nomeAcao + ":" + precoFinal + ":" + quantidade;
+                                InterfaceCliente referenciaVendedor = vendedor.getKey();
 
+                                referenciaCliente.notificar("voceComprou:" + mensagem);
+                                referenciaVendedor.notificar("voceVendeu" + mensagem);
+
+                                a.compradores.remove(referenciaCliente);
+                                a.vendedores.remove(referenciaVendedor);
                             }
                         }
                     }
@@ -96,7 +138,31 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
                 HashMap<Integer, Float> tmp = new HashMap<>();
                 tmp.put(quantidade, precoMinimo);
                 a.vendedores.put(referenciaCliente, tmp);
-                //encontrar par comprador/vendedor
+
+                //tentando fazer par comprador/vendedor
+                if (!a.compradores.isEmpty()) {
+                    for (HashMap.Entry<InterfaceCliente, HashMap<Integer, Float>> comprador : a.compradores.entrySet()) {
+                        //vendedor.getKey();
+                        //vendedor.getValue());
+                        HashMap<Integer, Float> temp = comprador.getValue();
+                        // é um for mas na verdade só tem um elemento
+                        for (HashMap.Entry<Integer, Float> qtdp : temp.entrySet()) {
+                            float precoComprador = qtdp.getValue();
+                            if (precoComprador >= precoMinimo) {
+                                //efetuar Venda
+                                float precoFinal = (precoComprador + precoMinimo) / 2;
+                                String mensagem = nomeAcao + ":" + precoFinal + ":" + quantidade;
+                                InterfaceCliente referenciaComprador = comprador.getKey();
+
+                                referenciaCliente.notificar("voceVendeu:" + mensagem);
+                                referenciaComprador.notificar("voceComprou" + mensagem);
+
+                                a.vendedores.remove(referenciaCliente);
+                                a.compradores.remove(referenciaComprador);
+                            }
+                        }
+                    }
+                }
 
                 break;
             }
