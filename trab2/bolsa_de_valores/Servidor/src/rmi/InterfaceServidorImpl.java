@@ -27,7 +27,6 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
         acoes.add(new Acao("bitcoin"));
         acoes.add(new Acao("petrobras"));
 
-        
         //uma thread que fica mudando os valores das acoes
         Thread t = new Thread() {
             public void run() {
@@ -54,31 +53,42 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
         t.start();
     }
 
+    //refistra o interesse do acionista em uma ação
     @Override
     public void registrarInteresse(String nomeAcao, InterfaceCliente referenciaCliente) throws RemoteException {
         boolean flag = false;
         for (Acao a : acoes) {
+            //procurando a ação interessada na lista de ações
             if (a.nome.equals(nomeAcao)) {
                 flag = true;
                 a.addInteressados(referenciaCliente);
             }
         }
+
         if (!flag) {
             System.out.println("Ação nao existe!");
         }
     }
 
+    //retorna o preço de mercado de uma ação sabendo o nome dela
     @Override
     public float consulta(String nome) throws RemoteException {
-        boolean flag = false;
-        for (Acao a : acoes) {
-            if (a.nome.equals(nome)) {
-                flag = true;
-                return a.precoDeMercado;
+        if (nome.equals("todos")) {
+            System.out.println("Todas as ações existentes: ");
+            for (Acao a : acoes) {
+                System.out.println(a.nome);
             }
-            if (!flag) {
-                System.out.println("Ação nao existe!");
-                //TODO:  criar a acao aqui
+        } else {
+            boolean flag = false;
+            for (Acao a : acoes) {
+                if (a.nome.equals(nome)) {
+                    flag = true;
+                    return a.precoDeMercado;
+                }
+                if (!flag) {
+                    System.out.println("Ação nao existe!");
+                    //TODO:  criar a acao aqui
+                }
             }
         }
         return -1;
@@ -98,8 +108,6 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
                 //tentando fazer par comprador/vendedor
                 if (!a.vendedores.isEmpty()) {
                     for (HashMap.Entry<InterfaceCliente, HashMap<Integer, Float>> vendedor : a.vendedores.entrySet()) {
-                        //vendedor.getKey();
-                        //vendedor.getValue());
                         HashMap<Integer, Float> temp = vendedor.getValue();
                         // é um for mas na verdade só tem um elemento
                         for (HashMap.Entry<Integer, Float> qtdp : temp.entrySet()) {
@@ -107,12 +115,15 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
                             if (precoVendedor <= precoMaximo) {
                                 //efetuar Venda
                                 float precoFinal = (precoMaximo + precoVendedor) / 2;
-                                String mensagem = nomeAcao + ":" + precoFinal + ":" + quantidade;
+//                                String mensagem = nomeAcao + ":" + precoFinal + ":" + quantidade;
+                                String mensagem = nomeAcao + " pelo preço " + precoFinal;
                                 InterfaceCliente referenciaVendedor = vendedor.getKey();
+                                //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
+                                referenciaCliente.notificar("voceComprou: " + mensagem);
+                                //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
+                                referenciaVendedor.notificar("voceVendeu: " + mensagem);
 
-                                referenciaCliente.notificar("voceComprou:" + mensagem);
-                                referenciaVendedor.notificar("voceVendeu" + mensagem);
-
+                                //removendo da lista de compradores/vendedores dessa ação as referencias
                                 a.compradores.remove(referenciaCliente);
                                 a.vendedores.remove(referenciaVendedor);
                             }
@@ -151,11 +162,12 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
                             if (precoComprador >= precoMinimo) {
                                 //efetuar Venda
                                 float precoFinal = (precoComprador + precoMinimo) / 2;
-                                String mensagem = nomeAcao + ":" + precoFinal + ":" + quantidade;
+//                                String mensagem = nomeAcao + ":" + precoFinal + ":" + quantidade;
+                                String mensagem = nomeAcao + " pelo preço " + precoFinal;
                                 InterfaceCliente referenciaComprador = comprador.getKey();
 
-                                referenciaCliente.notificar("voceVendeu:" + mensagem);
-                                referenciaComprador.notificar("voceComprou" + mensagem);
+                                referenciaCliente.notificar("voceVendeu: " + mensagem);
+                                referenciaComprador.notificar("voceComprou: " + mensagem);
 
                                 a.vendedores.remove(referenciaCliente);
                                 a.compradores.remove(referenciaComprador);

@@ -28,18 +28,21 @@ public class Acao {
         interessados = new ArrayList<>();
         compradores = new HashMap<>();
         vendedores = new HashMap<>();
+        //para gerar um valor inicial para a ação entre 10 e 100
         precoDeMercado = (float) (10 + Math.random() * (100 - 10));
     }
-    
-    public void addInteressados(InterfaceCliente cliente){
+
+    //para adicionar interessados
+    public void addInteressados(InterfaceCliente cliente) {
         this.interessados.add(cliente);
     }
-    
-    public void mudaPreco(float novoPreco) throws RemoteException{
+
+    //recebe onovo preço e notifica a todos os interessados dessa ação
+    public void mudaPreco(float novoPreco) throws RemoteException {
         //this.preco = novoPreco;
-        for(InterfaceCliente i: interessados){
-            i.notificar("novoPreco:" + String.valueOf(novoPreco));
+        for (InterfaceCliente i : interessados) {
+            i.notificar("novoPreco: " + String.valueOf(novoPreco) + " é o preço da ação " + this.nome);
         }
     }
- 
+
 }
