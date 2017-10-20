@@ -39,7 +39,7 @@ public class Acao {
 
     //recebe onovo preço e notifica a todos os interessados dessa ação
     public void mudaPreco(float novoPreco) throws RemoteException {
-        //this.preco = novoPreco;
+        this.precoDeMercado = novoPreco;
         for (InterfaceCliente i : interessados) {
             i.notificar("novoPreco: " + String.valueOf(novoPreco) + " é o preço da ação " + this.nome);
         }

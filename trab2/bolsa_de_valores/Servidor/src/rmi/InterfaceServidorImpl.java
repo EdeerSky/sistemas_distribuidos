@@ -85,10 +85,10 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
                     flag = true;
                     return a.precoDeMercado;
                 }
-                if (!flag) {
-                    System.out.println("Ação nao existe!");
-                    //TODO:  criar a acao aqui
-                }
+            }
+            if (!flag) {
+                System.out.println("Ação nao existe!");
+                //TODO:  criar a acao aqui
             }
         }
         return -1;
