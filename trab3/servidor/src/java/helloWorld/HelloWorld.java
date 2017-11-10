@@ -6,6 +6,7 @@
 package helloWorld;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -26,6 +27,8 @@ import javax.ws.rs.core.MediaType;
 public class HelloWorld {
 
     List<Acao> acoes;
+    int id;
+    HashMap<Integer, String> transacoes;
 
     @Context
     private UriInfo context;
@@ -35,6 +38,8 @@ public class HelloWorld {
      */
     public HelloWorld() {
         System.out.println("comecando codigo");
+        id = 1;
+        transacoes = new HashMap<>();
         //criando ações
         acoes = new ArrayList<>();
         //colocando algumas acoes padrão
@@ -76,32 +81,36 @@ public class HelloWorld {
         //http://localhost:8080/jersey-tutorial/bandas/{id}
 
         String idCliente = null;
+        String idTransacao = null;
         String tipo = null;
         String nomeAcao = null;
         String preco = null;
         String[] partes = comando.split(":");
 
-        if (partes.length >= 3) {
-            idCliente = partes[0].trim();
-            tipo = partes[1].trim();
+        tipo = partes[0].trim();
+        if (tipo.equals("compra")) {
+            idCliente = partes[1].trim();
             nomeAcao = partes[2].trim();
             preco = partes[3].trim();
-
-            if (idCliente != null && tipo != null && nomeAcao != null & preco != null) {
-
-                if (tipo.equals("compra")) {
-                    return compra(idCliente, nomeAcao, preco);
-                }
-                if (tipo.equals("venda")) {
-                    return venda(idCliente, nomeAcao, preco);
-                }
-                if (tipo.equals("consulta")) {
-                    return consulta(idCliente, nomeAcao, preco);
-                }
-            }
+            return compra(idCliente, nomeAcao, preco);
         }
 
-        return formarHtml("Erro, bem vindo!\n O request deve ser no formato seuID:comando:nomeAcao:preco");
+        if (tipo.equals("venda")) {
+            idCliente = partes[1].trim();
+            nomeAcao = partes[2].trim();
+            preco = partes[3].trim();
+            return venda(idCliente, nomeAcao, preco);
+        }
+        if (tipo.equals("consulta")) {
+            nomeAcao = partes[2].trim();
+            return consulta(nomeAcao);
+        }
+        if (tipo.equals("check")) {
+            idTransacao = partes[1].trim();
+            return consultaT(idTransacao);
+        }
+
+        return formarHtml("Erro, bem vindo!\n O request deve ser no formato comando:seuID:nomeAcao:preco");
     }
 
     /**
@@ -132,8 +141,53 @@ public class HelloWorld {
     }
 
     private String compra(String idCliente, String nomeAcao, String preco) {
+        int idDessaTransacao = id++;
+        float precoMaximo = Float.parseFloat(preco);
+        boolean flag = false;
+        for (Acao a : acoes) {
+            if (a.nome.equals(nomeAcao)) {
+                flag = true;
+                // colocando na lista de compradores
+                a.compradores.add(new DataCliente(Integer.parseInt(idCliente), precoMaximo, "nao ok", idDessaTransacao));
+                transacoes.put(idDessaTransacao, "Cliente " + idCliente + "fez uma compra da acao " + nomeAcao + " pelo preco " + preco);
 
-        return formarHtml("isso é uma compra, bem vindo");
+                //tentando fazer par comprador/vendedor
+                if (!a.vendedores.isEmpty()) {
+                    for (DataCliente vendedor : a.vendedores) {
+
+                        float precoVendedor = vendedor.preco;
+                        int idVendedor = vendedor.idCliente;
+
+                        if (precoVendedor <= precoMaximo) {
+                            //efetuar Venda
+                            float precoFinal = (precoMaximo + precoVendedor) / 2;
+
+                            String mensagem = nomeAcao + " pelo preço " + precoFinal;
+
+                            //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
+                            String p = "" + precoFinal + "";
+                            String msgOriginal = transacoes.get(idDessaTransacao);
+                            transacoes.put(id, msgOriginal + "\n Transação concluida, preco Final é de " + p);
+                            
+                            //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
+                            String pp = "" + precoFinal + "";
+                            String msgOriginal = transacoes.get(vendedor.idTransacao);
+                            transacoes.put(id, msgOriginal + "\n Transação concluida, preco Final é de " + pp);
+
+                            //removendo da lista de compradores/vendedores dessa ação as referencias
+//                            a.compradores.remove(referenciaCliente);
+//                            a.vendedores.remove(referenciaVendedor);
+                        }
+                    }
+                }
+
+                break;
+            }
+            if (!flag) {
+                return formarHtml("Ação não existe, bem vindo");
+            }
+        }
+        return formarHtml("isso é uma compra, bem vindo:" + idDessaTransacao);
     }
 
     private String venda(String idCliente, String nomeAcao, String preco) {
@@ -141,7 +195,7 @@ public class HelloWorld {
         return formarHtml("isso é uma venda, bem vindo");
     }
 
-    private String consulta(String idCliente, String nomeAcao, String preco) {
+    private String consulta(String nomeAcao) {
         String resposta = "";
         boolean flag = false;
         for (Acao a : acoes) {
@@ -155,7 +209,12 @@ public class HelloWorld {
             //TODO:  criar a acao aqui
         }
 
-        return formarHtml("isso é uma consulta, bem vindo");
+        return formarHtml(nomeAcao + " tem preco de " + resposta);
+    }
+
+    private String consultaT(String idTransacao) {
+
+        return formarHtml("check de estado da transacao, bem vindo");
     }
 
 }

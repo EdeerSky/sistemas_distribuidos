@@ -6,7 +6,9 @@ package helloWorld;
  * and open the template in the editor.
  */
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 
 /**
@@ -18,13 +20,13 @@ public class Acao {
     public String nome;
     public float precoDeMercado;
     //.............\/dentro desse hashmap tem <idCliente, preco>
-    public HashMap<Integer, Float> compradores;
-    public HashMap<Integer, Float> vendedores;
+    public List<DataCliente> compradores;
+    public List<DataCliente> vendedores;
 
     public Acao(String nome) {
         this.nome = nome;
-        compradores = new HashMap<>();
-        vendedores = new HashMap<>();
+        compradores = new ArrayList<>();
+        vendedores = new ArrayList<>();
         //para gerar um valor inicial para a ação entre 10 e 100
         precoDeMercado = (float) (10 + Math.random() * (100 - 10));
     }
