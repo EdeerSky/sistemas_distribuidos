@@ -7,7 +7,10 @@ package helloWorld;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Produces;
@@ -25,6 +28,7 @@ import org.apache.jasper.tagplugins.jstl.ForEach;
  * @author a1013343
  */
 @Path("helloworld")
+@Singleton
 public class HelloWorld {
 
     List<Acao> acoes;
