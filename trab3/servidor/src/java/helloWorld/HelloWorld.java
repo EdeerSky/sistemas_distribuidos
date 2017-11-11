@@ -149,7 +149,7 @@ public class HelloWorld {
                 flag = true;
                 // colocando na lista de compradores
                 a.compradores.add(new DataCliente(Integer.parseInt(idCliente), precoMaximo, "nao ok", idDessaTransacao));
-                transacoes.put(idDessaTransacao, "Cliente " + idCliente + "fez uma compra da acao " + nomeAcao + " pelo preco " + preco);
+                transacoes.put(idDessaTransacao, "Cliente " + idCliente + "requisitou uma compra da acao " + nomeAcao + " pelo preço " + preco);
 
                 //tentando fazer par comprador/vendedor
                 if (!a.vendedores.isEmpty()) {
@@ -167,27 +167,29 @@ public class HelloWorld {
                             //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
                             String p = "" + precoFinal + "";
                             String msgOriginal = transacoes.get(idDessaTransacao);
-                            transacoes.put(id, msgOriginal + "\n Transação concluida, preco Final é de " + p);
-                            
+                            transacoes.put(id, msgOriginal + "\n Transação concluida com cliente " + vendedor.idCliente + ", preco Final é de " + p);
+
                             //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
                             String pp = "" + precoFinal + "";
-                            String msgOriginal = transacoes.get(vendedor.idTransacao);
-                            transacoes.put(id, msgOriginal + "\n Transação concluida, preco Final é de " + pp);
+                            String msgOriginal2 = transacoes.get(vendedor.idTransacao);
+                            transacoes.put(vendedor.idTransacao, msgOriginal2 + "\n Transação concluida com cliente " + idCliente + ", preco Final é de " + pp);
 
                             //removendo da lista de compradores/vendedores dessa ação as referencias
-//                            a.compradores.remove(referenciaCliente);
-//                            a.vendedores.remove(referenciaVendedor);
+                            //retira o item que acabou de ser adicionado
+                            a.compradores.remove(a.compradores.size() - 1);
+                            a.vendedores.remove(vendedor);
+
+                            break;
                         }
                     }
                 }
-
-                break;
-            }
-            if (!flag) {
-                return formarHtml("Ação não existe, bem vindo");
             }
         }
-        return formarHtml("isso é uma compra, bem vindo:" + idDessaTransacao);
+        if (!flag) {
+            return formarHtml("0:Ação não existe, bem vindo");
+        }
+
+        return formarHtml(idDessaTransacao + ":isso é uma compra, bem vindo");
     }
 
     private String venda(String idCliente, String nomeAcao, String preco) {
