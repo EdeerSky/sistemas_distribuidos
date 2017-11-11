@@ -17,6 +17,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PUT;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
+import org.apache.jasper.tagplugins.jstl.ForEach;
 
 /**
  * REST Web Service
@@ -215,8 +216,22 @@ public class HelloWorld {
     }
 
     private String consultaT(String idTransacao) {
+        //busca a transação e retorna o seu status
+        if (transacoes.containsKey(Integer.parseInt(idTransacao))) {
+            String estado = transacoes.get(idTransacao);
+            return formarHtml(estado);
+        }
+        if (Integer.parseInt(idTransacao) == 0) {
+            String tudo = "";
+            for (int key : transacoes.keySet()) {
+                tudo += key + " - " + transacoes.get(key);
+                tudo += "\n";
+            }
 
-        return formarHtml("check de estado da transacao, bem vindo");
+        }
+
+        return formarHtml("Essa transação não existe. check de estado da transacao, bem vindo");
+
     }
 
 }
