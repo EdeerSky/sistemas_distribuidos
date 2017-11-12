@@ -194,7 +194,7 @@ public class HelloWorld {
             return formarHtml("0:Ação não existe, bem vindo");
         }
 
-        return formarHtml(idDessaTransacao + ":isso é uma compra, bem vindo");
+        return formarHtml("ID dessa transação: " + idDessaTransacao + ", isso é uma compra.");
     }
 
     private String venda(String idCliente, String nomeAcao, String preco) {
@@ -245,20 +245,30 @@ public class HelloWorld {
         if (!flag) {
             return formarHtml("0:Ação não existe, bem vindo");
         }
-        return formarHtml(idDessaTransacao + "isso é uma venda, bem vindo");
+        return formarHtml("ID dessa transação: " + idDessaTransacao + ", isso é uma venda.");
     }
 
     private String consulta(String nomeAcao) {
         String resposta = "";
         boolean flag = false;
-        for (Acao a : acoes) {
-            if (a.nome.equals(nomeAcao)) {
-                flag = true;
-                resposta = String.valueOf(a.precoDeMercado);
+        if(nomeAcao.equals("all")) {
+            flag = true;
+            for (Acao a : acoes) {
+                resposta += (a.nome + " tem preço de " + a.precoDeMercado + "\n");
+            }
+            return formarHtml(resposta);
+        }
+        else {
+            for (Acao a : acoes) {
+                if (a.nome.equals(nomeAcao)) {
+                    flag = true;
+                    resposta = String.valueOf(a.precoDeMercado);
+                }
             }
         }
         if (!flag) {
-            System.out.println("Ação nao existe!");
+            return formarHtml("Essa ação não existe!");
+            //System.out.println("Ação nao existe!");
             //TODO:  criar a acao aqui
         }
 
@@ -271,13 +281,13 @@ public class HelloWorld {
             String estado = transacoes.get(Integer.parseInt(idTransacao));
             return formarHtml(estado);
         }
-        if (Integer.parseInt(idTransacao) == 0) {
+        if (Integer.parseInt(idTransacao.trim()) == 0) {
             String tudo = "";
             for (int key : transacoes.keySet()) {
                 tudo += key + " - " + transacoes.get(key);
                 tudo += "\n";
             }
-
+            return formarHtml(tudo);
         }
 
         return formarHtml("Essa transação não existe. check de estado da transacao, bem vindo");
