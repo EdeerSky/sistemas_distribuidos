@@ -5,6 +5,14 @@
 
 import requests
 from IPython.display import clear_output
+import random
+import os
+
+myId = random.randint(100, 999)
+
+def insertChar(mystring, position, chartoinsert ):
+    mystring   =  mystring[:position] + chartoinsert + mystring[position:] 
+    return mystring 
 
 def rmv_str(test_str):
     ret = ''
@@ -28,23 +36,31 @@ def rmv_str(test_str):
             ret += i
     return ret
 
-print('Digite "comandos" para saber os comandos disponíveis ou "clear" para limpar a saída')
+print('Digite "comandos" para saber os comandos disponíveis ou "clear" para limpar a saída. Seu Id é', myId)
 while(1):
     entrada = input("Digite o comando: ")
     if(entrada !='comandos' and entrada != 'clear'):
-        saida = 'http://localhost:8080/servidor/webresources/helloworld/' + entrada
+        if('check' not in entrada):
+            entrada = entrada.replace(" ", ":")
+            entrada = insertChar(entrada, entrada.find(':'), ':'+str(myId))
+            saida = 'http://localhost:8080/servidor/webresources/helloworld/' + entrada
+        else:
+            entrada = entrada.replace(" ", ":")
+            saida = 'http://localhost:8080/servidor/webresources/helloworld/' + entrada
         r = requests.get(saida)
-        #print(saida)
-        print(rmv_str(r.text))
+        print(saida)
+        print(rmv_str(r.text).encode("windows-1252").decode("utf-8"))
     if(entrada=='comandos'):
         print('Comandos disponíveis:')
-        print(' - Compra de ações   ->  compra:seuID:nomeAção:Preço')
-        print(' - Venda de ações    ->  venda:seuID:nomeAção:Preço')
-        print(' - Consulta de preço ->  consulta:seuID:nomeAção')
-        print(' - Checar status     ->  check:idTransação')
+        print(' - Compra de ações   ->  compra nomeAção Preço')
+        print(' - Venda de ações    ->  venda nomeAção Preço')
+        print(' - Consulta de preço ->  consulta nomeAção')
+        print(' - Checar status     ->  check idTransação')
     if(entrada=='clear'):
         clear_output()
-        print('Digite "comandos" para saber os comandos disponíveis ou "clear" para limpar a saída')
+        os.system('cls')
+        os.system('clear')
+        print('Digite "comandos" para saber os comandos disponíveis ou "clear" para limpar a saída. Seu Id é', myId)
 
 
 # In[ ]:

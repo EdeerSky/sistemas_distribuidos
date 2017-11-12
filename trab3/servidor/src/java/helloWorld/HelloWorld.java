@@ -154,7 +154,7 @@ public class HelloWorld {
                 flag = true;
                 // colocando na lista de compradores
                 a.compradores.add(new DataCliente(Integer.parseInt(idCliente), precoMaximo, "nao ok", idDessaTransacao));
-                transacoes.put(idDessaTransacao, "Cliente " + idCliente + "requisitou uma compra da acao " + nomeAcao + " pelo preço " + preco);
+                transacoes.put(idDessaTransacao, "Cliente " + idCliente + " requisitou uma compra da ação " + nomeAcao + " pelo preço " + preco);
 
                 //tentando fazer par comprador/vendedor
                 if (!a.vendedores.isEmpty()) {
@@ -172,12 +172,12 @@ public class HelloWorld {
                             //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
                             String p = "" + precoFinal + "";
                             String msgOriginal = transacoes.get(idDessaTransacao);
-                            transacoes.put(id, msgOriginal + "\n Transação concluida com cliente " + vendedor.idCliente + ", preco Final é de " + p);
+                            transacoes.put(id, msgOriginal + ". Transação concluida com cliente " + vendedor.idCliente + ", preco Final é de " + p);
 
                             //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
                             String pp = "" + precoFinal + "";
                             String msgOriginal2 = transacoes.get(vendedor.idTransacao);
-                            transacoes.put(vendedor.idTransacao, msgOriginal2 + "\n Transação concluida com cliente " + idCliente + ", preco Final é de " + pp);
+                            transacoes.put(vendedor.idTransacao, msgOriginal2 + ". Transação concluida com cliente " + idCliente + ", preco Final é de " + pp);
 
                             //removendo da lista de compradores/vendedores dessa ação as referencias
                             //retira o item que acabou de ser adicionado
@@ -198,8 +198,54 @@ public class HelloWorld {
     }
 
     private String venda(String idCliente, String nomeAcao, String preco) {
+        int idDessaTransacao = id++;
+        float precoMinimo = Float.parseFloat(preco);
+        boolean flag = false;
+        for (Acao a : acoes) {
+            if (a.nome.equals(nomeAcao)) {
+                flag = true;
+                // colocando na lista de compradores
+                a.compradores.add(new DataCliente(Integer.parseInt(idCliente), precoMinimo, "nao ok", idDessaTransacao));
+                transacoes.put(idDessaTransacao, "Cliente " + idCliente + " requisitou uma venda da ação " + nomeAcao + " pelo preço " + preco);
 
-        return formarHtml("isso é uma venda, bem vindo");
+                //tentando fazer par comprador/vendedor
+                if (!a.compradores.isEmpty()) {
+                    for (DataCliente comprador : a.vendedores) {
+
+                        float precoComprador = comprador.preco;
+                        int idComprador = comprador.idCliente;
+
+                        if (precoComprador >= precoMinimo) {
+                            //efetuar Venda
+                            float precoFinal = (precoMinimo+ precoComprador) / 2;
+
+                            String mensagem = nomeAcao + " pelo preço " + precoFinal;
+
+                            //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
+                            String p = "" + precoFinal + "";
+                            String msgOriginal = transacoes.get(idDessaTransacao);
+                            transacoes.put(id, msgOriginal + ". Transação concluida com cliente " + comprador.idCliente + ", preco Final é de " + p);
+
+                            //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
+                            String pp = "" + precoFinal + "";
+                            String msgOriginal2 = transacoes.get(comprador.idTransacao);
+                            transacoes.put(comprador.idTransacao, msgOriginal2 + ". Transação concluida com cliente " + idCliente + ", preco Final é de " + pp);
+
+                            //removendo da lista de compradores/vendedores dessa ação as referencias
+                            //retira o item que acabou de ser adicionado
+                            a.compradores.remove(a.compradores.size() - 1);
+                            a.vendedores.remove(comprador);
+
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (!flag) {
+            return formarHtml("0:Ação não existe, bem vindo");
+        }
+        return formarHtml(idDessaTransacao + "isso é uma venda, bem vindo");
     }
 
     private String consulta(String nomeAcao) {
@@ -222,7 +268,7 @@ public class HelloWorld {
     private String consultaT(String idTransacao) {
         //busca a transação e retorna o seu status
         if (transacoes.containsKey(Integer.parseInt(idTransacao))) {
-            String estado = transacoes.get(idTransacao);
+            String estado = transacoes.get(Integer.parseInt(idTransacao));
             return formarHtml(estado);
         }
         if (Integer.parseInt(idTransacao) == 0) {
