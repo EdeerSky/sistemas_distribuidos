@@ -115,7 +115,7 @@ public class HelloWorld {
             return consultaT(idTransacao);
         }
 
-        return formarHtml("Erro, bem vindo!\n O request deve ser no formato comando:seuID:nomeAcao:preco");
+        return formarHtml("Erro!!\n O request deve ser no formato comando:seuID:nomeAcao:preco");
     }
 
     /**
