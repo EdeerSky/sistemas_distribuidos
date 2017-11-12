@@ -172,7 +172,7 @@ public class HelloWorld {
                             //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
                             String p = "" + precoFinal + "";
                             String msgOriginal = transacoes.get(idDessaTransacao);
-                            transacoes.put(id, msgOriginal + ". Transação concluida com cliente " + vendedor.idCliente + ", preco Final é de " + p);
+                            transacoes.put(idDessaTransacao, msgOriginal + ". Transação concluida com cliente " + vendedor.idCliente + ", preco Final é de " + p);
 
                             //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
                             String pp = "" + precoFinal + "";
@@ -205,12 +205,12 @@ public class HelloWorld {
             if (a.nome.equals(nomeAcao)) {
                 flag = true;
                 // colocando na lista de compradores
-                a.compradores.add(new DataCliente(Integer.parseInt(idCliente), precoMinimo, "nao ok", idDessaTransacao));
+                a.vendedores.add(new DataCliente(Integer.parseInt(idCliente), precoMinimo, "nao ok", idDessaTransacao));
                 transacoes.put(idDessaTransacao, "Cliente " + idCliente + " requisitou uma venda da ação " + nomeAcao + " pelo preço " + preco);
 
                 //tentando fazer par comprador/vendedor
                 if (!a.compradores.isEmpty()) {
-                    for (DataCliente comprador : a.vendedores) {
+                    for (DataCliente comprador : a.compradores) {
 
                         float precoComprador = comprador.preco;
                         int idComprador = comprador.idCliente;
@@ -224,7 +224,7 @@ public class HelloWorld {
                             //notifica o cliente que a compra foi efetuada, e passa o preço final e nome
                             String p = "" + precoFinal + "";
                             String msgOriginal = transacoes.get(idDessaTransacao);
-                            transacoes.put(id, msgOriginal + ". Transação concluida com cliente " + comprador.idCliente + ", preco Final é de " + p);
+                            transacoes.put(idDessaTransacao, msgOriginal + ". Transação concluida com cliente " + comprador.idCliente + ", preco Final é de " + p);
 
                             //notifica o vendedor que a venda foi efetuada, e passa o preço final e nome
                             String pp = "" + precoFinal + "";
@@ -233,8 +233,8 @@ public class HelloWorld {
 
                             //removendo da lista de compradores/vendedores dessa ação as referencias
                             //retira o item que acabou de ser adicionado
-                            a.compradores.remove(a.compradores.size() - 1);
-                            a.vendedores.remove(comprador);
+                            a.vendedores.remove(a.vendedores.size() - 1);
+                            a.compradores.remove(comprador);
 
                             break;
                         }
