@@ -4,7 +4,7 @@
 # In[ ]:
 
 import requests
-from IPython.display import clear_output
+#from IPython.display import clear_output
 import random
 import os
 
@@ -46,7 +46,7 @@ while(1):
             entrada = insertChar(entrada, entrada.find(':'), ':'+str(myId))
             saida = 'http://localhost:8080/servidor/webresources/helloworld/' + entrada
             r = requests.get(saida)
-            if('consulta' not in entrada):
+            if('consulta' not in entrada and ('compra' in entrada or 'venda' in entrada)):
                 s = rmv_str(r.text)
                 myTransactions.append(int(''.join(filter(str.isdigit, s))))
         elif('check' in entrada):
@@ -55,6 +55,7 @@ while(1):
             r = requests.get(saida)
         print(saida)
         print(rmv_str(r.text).encode("windows-1252").decode("utf-8"))
+        print("")
     if(entrada=='comandos'):
         print('Comandos disponíveis:')
         print(' - Compra de ações       ->  compra nomeAção Preço')
