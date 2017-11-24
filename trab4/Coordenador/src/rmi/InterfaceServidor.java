@@ -15,4 +15,5 @@ import java.rmi.RemoteException;
 public interface InterfaceServidor extends Remote {
 
     String sayHello(String nomeCliente, InterfaceCliente referenciaCliente) throws RemoteException;
+    
 }

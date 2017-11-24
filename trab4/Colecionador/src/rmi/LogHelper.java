@@ -5,16 +5,11 @@
  */
 package rmi;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.util.List;
-
 /**
  *
  * @author a1013343
  */
-public interface InterfaceCliente extends Remote {
-
-    String echo(String texto) throws RemoteException;
-    List getCards() throws RemoteException;
+public class LogHelper {
+    Sting nome;
+    
 }
