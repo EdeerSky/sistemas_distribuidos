@@ -10,6 +10,17 @@ package rmi;
  * @author a1013343
  */
 public class Card {
+
     String nome;
-    Integer quantidade;    
+    Integer quantidade;
+
+    public Card(String nome, Integer quantidade) {
+        this.nome = nome;
+        this.quantidade = quantidade;
+    }
+
+    @Override
+    public String toString() {
+        return nome + ":" + quantidade + "\n";
+    }
 }

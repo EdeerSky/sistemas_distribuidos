@@ -5,18 +5,33 @@
  */
 package rmi;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class InterfaceClienteImpl extends UnicastRemoteObject implements InterfaceCliente {
 
     String nome;
-    
+    File db;
 
     InterfaceClienteImpl(InterfaceServidor referenciaServidor) throws RemoteException {
-        referenciaServidor.sayHello("cliente1", this);
-        nome = "123";
+        BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            System.out.println("Digite o nome do cliente:");
+            this.nome = bufferRead.readLine();
+        } catch (IOException ex) {
+            Logger.getLogger(InterfaceClienteImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        referenciaServidor.sayHello(nome, this);
+
+        //criando ARQUIVO DE CARTAS
+        db = LogHelper.generateCardCollection(nome);
     }
 
     @Override
