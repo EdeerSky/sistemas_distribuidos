@@ -11,14 +11,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+//saopaulo:qte:idT:a
+//rio:qte:idT:r
+//rio:qte
 
 public class InterfaceClienteImpl extends UnicastRemoteObject implements InterfaceCliente {
 
     String nome;
     File db;
+    List<String> minhaColecao;
+    File dbTmp;
 
     InterfaceClienteImpl(InterfaceServidor referenciaServidor) throws RemoteException {
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
@@ -32,6 +39,11 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
 
         //criando ARQUIVO DE CARTAS
         db = LogHelper.generateCardCollection(nome);
+        minhaColecao = LogHelper.readdb(db);
+        //criando db temporaria
+        LogHelper.copyFile(db, dbTmp);
+        
+        //colocar interface em um loop aqui
     }
 
     @Override
@@ -42,7 +54,7 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
 
     @Override
     public List getCards() throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return minhaColecao;
     }
 
     @Override
@@ -60,4 +72,16 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    @Override
+    public String abortTransaction(int idT) throws RemoteException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public String trocarCartao(int idT, Card aRetirar, Card aReceber) throws RemoteException {
+        
+    }
+
 }
+
+

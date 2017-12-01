@@ -18,4 +18,8 @@ public interface InterfaceServidor extends Remote {
 
     String updateTransactionState(int idT, String estado) throws RemoteException;
 
+    String listAllCards() throws RemoteException;
+
+    String startTransaction(String nomeCliente, InterfaceCliente referenciaCliente, Card offered, Card wanted, String nomeOutro) throws RemoteException;
+
 }

@@ -136,4 +136,13 @@ public class LogHelper {
         }
         LogHelper.recreateFile(nome, cards);
     }
+    
+    public static synchronized void deleteFile(File nome){
+        //todo: implementar
+    }
+    
+    public static synchronized void copyFile(File orig, File dest){
+        List<String> origData = readdb(orig);
+        recreateFile(dest, origData);
+    }
 }
