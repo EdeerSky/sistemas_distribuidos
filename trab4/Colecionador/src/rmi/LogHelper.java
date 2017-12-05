@@ -136,12 +136,46 @@ public class LogHelper {
         }
         LogHelper.recreateFile(nome, cards);
     }
-    
-    public static synchronized void deleteFile(File nome){
+
+    public static synchronized void retirarCartaoTmp(File nome, String cartao, int idT) {
+        //saopaulo:qte:idT:a
+        //rio:qte:idT:r
+        //rio:qte
+        List<String> cards = LogHelper.readdb(nome);
+        for (String c : cards) {
+            String cidade = c.split(":")[0];
+            String quantidade = c.split(":")[1];
+            if (cidade.equalsIgnoreCase(cartao)) {
+                //falta checar se ja nao tem outra transacao alterando essa carta
+                c += ":" + String.valueOf(idT) + ":" + "r";
+                break;
+            }
+        }
+        LogHelper.recreateFile(nome, cards);
+    }
+
+    public static synchronized void colocarCartaoTmp(File nome, String cartao, int idT) {
+        //saopaulo:qte:idT:a
+        //rio:qte:idT:r
+        //rio:qte
+        List<String> cards = LogHelper.readdb(nome);
+        for (String c : cards) {
+            String cidade = c.split(":")[0];
+            String quantidade = c.split(":")[1];
+            if (cidade.equalsIgnoreCase(cartao)) {
+                //falta checar se ja nao tem outra transacao alterando essa carta
+                c += ":" + String.valueOf(idT) + ":" + "a";
+                break;
+            }
+        }
+        LogHelper.recreateFile(nome, cards);
+    }
+
+    public static synchronized void deleteFile(File nome) {
         //todo: implementar
     }
-    
-    public static synchronized void copyFile(File orig, File dest){
+
+    public static synchronized void copyFile(File orig, File dest) {
         List<String> origData = readdb(orig);
         recreateFile(dest, origData);
     }

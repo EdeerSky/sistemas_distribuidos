@@ -2,13 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab4/Colecionador/src/rmi/Cliente.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab4/Colecionador/src/rmi/Card.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab4/Colecionador/src/rmi/LogHelper.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab4/Colecionador/src/rmi/InterfaceClienteImpl.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab4/Colecionador/src/rmi/InterfaceServidor.java</file>
-            <file>file:/home/todos/alunos/ct/a1013343/sistemas_distribuidos/trab4/Colecionador/src/rmi/InterfaceCliente.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

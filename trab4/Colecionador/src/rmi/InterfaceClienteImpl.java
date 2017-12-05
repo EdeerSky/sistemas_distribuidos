@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 //saopaulo:qte:idT:a
 //rio:qte:idT:r
 //rio:qte
-
 public class InterfaceClienteImpl extends UnicastRemoteObject implements InterfaceCliente {
 
     String nome;
@@ -42,7 +41,7 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
         minhaColecao = LogHelper.readdb(db);
         //criando db temporaria
         LogHelper.copyFile(db, dbTmp);
-        
+
         //colocar interface em um loop aqui
     }
 
@@ -69,19 +68,25 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
 
     @Override
     public String finishTransaction(int idT) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //procura no dpTmp as linhas que possuem dados temporarios
+        //faz a operacao no db final
+
+        return "";
     }
 
     @Override
     public String abortTransaction(int idT) throws RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //apaga os indicadores de operação do dpTmp
+        
+        return "";
     }
 
     @Override
     public String trocarCartao(int idT, Card aRetirar, Card aReceber) throws RemoteException {
-        
+        //coloca as mudanças no aquivo temporario
+        LogHelper.retirarCartaoTmp(dbTmp, aRetirar.nome, idT);
+        LogHelper.colocarCartaoTmp(dbTmp, aReceber.nome, idT);
+        return "";
     }
 
 }
-
-
