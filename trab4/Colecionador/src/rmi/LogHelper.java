@@ -93,6 +93,21 @@ public class LogHelper {
         }
     }
 
+    public static synchronized int lerQtde(File nome, String cartao) {
+        Path path = Paths.get(nome.getAbsolutePath());
+        try {
+            List<String> dados = Files.readAllLines(path, StandardCharsets.UTF_8);
+            for (String l : dados) {
+                if (l.trim().split(":")[0].equals(cartao)) {
+                    return Integer.parseInt(l.trim().split(":")[1]);
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return -1;
+    }
+
     public static synchronized List<String> readdb(File nome) {
         Path path = Paths.get(nome.getAbsolutePath());
         try {
