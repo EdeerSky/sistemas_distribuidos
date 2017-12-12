@@ -1,0 +1,5 @@
+Curitiba:2
+Maringa:1
+Pokemon:1
+Cerulean:1
+JimmyCity:1

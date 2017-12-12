@@ -11,10 +11,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class InterfaceServidorImpl extends UnicastRemoteObject implements InterfaceServidor {
 
     List<Clientes> clientes;
+    int id = 1;
 
     InterfaceServidorImpl() throws RemoteException {
         clientes = new ArrayList<>();
@@ -37,17 +41,43 @@ public class InterfaceServidorImpl extends UnicastRemoteObject implements Interf
     public String listAllCards() throws RemoteException {
         //um cliente pediu pra ver as casrtas de todo mundo
         //pegar listas de cartas de todos e devolver para o cliente que pediu
-        String resposta = "";
+        List<String> resposta = new ArrayList<>();
+        int numThreads = clientes.size();
+        CountDownLatch latch = new CountDownLatch(numThreads);
         for (Clientes cl : clientes) {
-            resposta += "\n" + cl.nome + ": " + cl.referencia.getCards();
+            (new Thread() {
+                public void run() {
+                    try {
+                        // do stuff
+                        resposta.add( "\n" + cl.nome + ": " + cl.referencia.getCards());
+                        latch.countDown();
+                    } catch (RemoteException ex) {
+                        Logger.getLogger(InterfaceServidorImpl.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }).start();
         }
-        return resposta;
+        try {
+            latch.await();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(InterfaceServidorImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return resposta.toString();
     }
 
     @Override
     public String startTransaction(String nomeCliente, InterfaceCliente referenciaCliente, Card offered, Card wanted, String nomeOutro) throws RemoteException {
         //cliente quer iniciar uma troca
-        throw new UnsupportedOperationException("Not supported yet.");
+        id++;
+        referenciaCliente.trocarCartao(id, offered, wanted);
+        for (Clientes cl : clientes) {
+            if (cl.nome.equalsIgnoreCase(nomeOutro)) {
+                cl.referencia.trocarCartao(id, wanted, offered);
+                break;
+            }
+        }
+
+        return "iniciou";
     }
 
 }

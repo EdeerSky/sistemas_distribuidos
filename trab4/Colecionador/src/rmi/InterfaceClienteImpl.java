@@ -21,12 +21,12 @@ import java.util.logging.Logger;
 //rio:qte:idT:r
 //rio:qte
 public class InterfaceClienteImpl extends UnicastRemoteObject implements InterfaceCliente {
-
+    
     String nome;
     File db;
     List<String> minhaColecao;
     File dbTmp;
-
+    
     InterfaceClienteImpl(InterfaceServidor referenciaServidor) throws RemoteException {
         BufferedReader bufferRead = new BufferedReader(new InputStreamReader(System.in));
         try {
@@ -39,21 +39,37 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
 
         //criando ARQUIVO DE CARTAS
         db = LogHelper.generateCardCollection(nome);
-        minhaColecao = LogHelper.readdb(db);
+        //minhaColecao = LogHelper.readdb(db);
         //criando db temporaria
+        dbTmp = LogHelper.createF(nome + "Tmp");
         LogHelper.copyFile(db, dbTmp);
 
         //colocar interface em um loop aqui
         while (true) {
-            System.out.println("0 - buscar cartas de todos os colecionadores");
-
+            System.out.println("1 - buscar cartas de todos os colecionadores");
+            System.out.println("2 - trocar cartas");
+            
             Scanner keyboard = new Scanner(System.in);
             System.out.println("enter an integer");
             String cmd = keyboard.nextLine();
-
-            if (cmd.equals("0")) {
+            
+            if (cmd.equals("1")) {
                 String resposta = referenciaServidor.listAllCards();
                 System.out.println("cartas encontradas:\n" + resposta);
+            }
+            if (cmd.equals("2")) {
+                Scanner k = new Scanner(System.in);
+                System.out.println("Com quem quer trocar");
+                String outraPessoa = k.nextLine();
+                System.out.println("voce oferece qual carta?");
+                String minha = k.nextLine();
+                System.out.println("voce quer qual carta?");
+                String quero = k.nextLine();
+                
+                Card offered = new Card(minha, 1);
+                Card wanted = new Card(quero, 1);
+                
+                String resposta = referenciaServidor.startTransaction(nome, this, offered, wanted, outraPessoa);
             }
         }
     }
@@ -76,19 +92,19 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
     public String removeCard(Card card) throws RemoteException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
     public List getCards() throws RemoteException {
         minhaColecao = LogHelper.readdb(db);
         return minhaColecao;
     }
-
+    
     @Override
     public String finishTransaction(int idT) throws RemoteException {
         //rio:qte:idT:r
         //procura no dpTmp as linhas que possuem dados temporarios
         List<String> dadosDbTmp = LogHelper.readdb(dbTmp);
-
+        
         for (String l : dadosDbTmp) {
             String[] partes = l.trim().split(":");
             if (partes.length > 2) {
@@ -107,15 +123,15 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
             }
         }
         LogHelper.recreateFile(db, dadosDbTmp);
-
+        
         return "";
     }
-
+    
     @Override
     public String abortTransaction(int idT) throws RemoteException {
         //apaga os indicadores de operação do dpTmp
         List<String> dadosDbTmp = LogHelper.readdb(dbTmp);
-
+        
         for (String l : dadosDbTmp) {
             String[] partes = l.trim().split(":");
             if (partes.length > 2) {
@@ -129,7 +145,7 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
         LogHelper.recreateFile(db, dadosDbTmp);
         return "";
     }
-
+    
     @Override
     public String trocarCartao(int idT, Card aRetirar, Card aReceber) throws RemoteException {
         //coloca as mudanças no aquivo temporario
@@ -137,5 +153,5 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
         LogHelper.colocarCartaoTmp(dbTmp, aReceber.nome, idT);
         return "";
     }
-
+    
 }

@@ -46,7 +46,7 @@ public class LogHelper {
             try {
                 out = new PrintWriter(db);
                 for (Card c : cards) {
-                    out.print(c.toString());
+                    out.println(c.toString());
                 }
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
@@ -56,14 +56,40 @@ public class LogHelper {
             return db;
         }
     }
-
+    
+    public static File createF(String nome) {
+        //pesquisa se ja existe uma coleção com esse nome
+        File db = new File(nome + ".txt");
+        PrintWriter out = null;
+        if (db.exists()) {
+            return db;
+        } //senão, criar
+        else {
+            ArrayList<Card> cards = new ArrayList<>();
+            cards.add(new Card("temporario", 1));
+            try {
+                out = new PrintWriter(db);
+                for (Card c : cards) {
+                    out.println(c.toString());
+                }
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                out.close();
+            }
+            return db;
+        }
+    }
+            
     public static synchronized void recreateFile(File nome, List<String> cards) {
-        clearTheFile(nome);
+        if (nome != null) {
+            clearTheFile(nome);
+        }
         PrintWriter out = null;
         try {
             out = new PrintWriter(nome);
             for (String c : cards) {
-                out.print(c.toString());
+                out.println(c.toString());
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
