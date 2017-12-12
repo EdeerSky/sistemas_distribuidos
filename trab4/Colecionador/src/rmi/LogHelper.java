@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sun.text.normalizer.UTF16;
 
 /**
  *
@@ -81,16 +80,20 @@ public class LogHelper {
             pwOb = new PrintWriter(fwOb, false);
             pwOb.flush();
 
+            pwOb.close();
+            fwOb.close();
+
         } catch (IOException ex) {
-            Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                pwOb.close();
-                fwOb.close();
-            } catch (IOException ex) {
-                Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            System.out.println("deu erro:" + ex.getLocalizedMessage());
         }
+//        finally {
+//            try {
+//                pwOb.close();
+//                fwOb.close();
+//            } catch (IOException ex) {
+//                Logger.getLogger(LogHelper.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
     }
 
     public static synchronized int lerQtde(File nome, String cartao) {

@@ -13,6 +13,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +44,18 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
         LogHelper.copyFile(db, dbTmp);
 
         //colocar interface em um loop aqui
+        while (true) {
+            System.out.println("0 - buscar cartas de todos os colecionadores");
+
+            Scanner keyboard = new Scanner(System.in);
+            System.out.println("enter an integer");
+            String cmd = keyboard.nextLine();
+
+            if (cmd.equals("0")) {
+                String resposta = referenciaServidor.listAllCards();
+                System.out.println("cartas encontradas:\n" + resposta);
+            }
+        }
     }
 
     //não utilizada
@@ -66,6 +79,7 @@ public class InterfaceClienteImpl extends UnicastRemoteObject implements Interfa
 
     @Override
     public List getCards() throws RemoteException {
+        minhaColecao = LogHelper.readdb(db);
         return minhaColecao;
     }
 
